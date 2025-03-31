@@ -1,0 +1,55 @@
+{
+  "name": "event-web-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "start": "vite"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.1.2",
+    "@heroicons/react": "^2.1.5",
+    "@react-google-maps/api": "^2.19.3",
+    "@react-pdf/renderer": "^3.4.4",
+    "@tailwindcss/forms": "^0.5.7",
+    "axios": "^1.7.2",
+    "firebase": "^11.3.0",
+    "formik": "^2.4.6",
+    "html-to-image": "^1.11.11",
+    "moment": "^2.30.1",
+    "plyr-react": "^5.3.0",
+    "qrcode.react": "^3.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.5.2",
+    "react-icons": "^5.4.0",
+    "react-intersection-observer": "^9.16.0",
+    "react-places-autocomplete": "^7.3.0",
+    "react-player": "^2.16.0",
+    "react-router-dom": "^6.25.1",
+    "react-spinners": "^0.14.1",
+    "rsuite": "^5.68.0",
+    "sonner": "^1.5.0",
+    "yup": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.3",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "postcss": "^8.5.2",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.2.0"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

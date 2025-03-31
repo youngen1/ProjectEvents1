@@ -1,0 +1,415 @@
+[debug] [2025-03-28T11:43:57.754Z] ----------------------------------------------------------------------
+[debug] [2025-03-28T11:43:57.758Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions:api
+[debug] [2025-03-28T11:43:57.759Z] CLI Version:   14.0.0
+[debug] [2025-03-28T11:43:57.759Z] Platform:      win32
+[debug] [2025-03-28T11:43:57.759Z] Node Version:  v23.4.0
+[debug] [2025-03-28T11:43:57.760Z] Time:          Fri Mar 28 2025 13:43:57 GMT+0200 (South Africa Standard Time)
+[debug] [2025-03-28T11:43:57.760Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-03-28T11:43:58.157Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-28T11:43:58.158Z] > authorizing via signed-in user (thanduxolomfusi@gmail.com)
+[debug] [2025-03-28T11:43:58.158Z] [iam] checking project event-management-1a68f for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-03-28T11:43:58.160Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:43:58.160Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:43:58.162Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions [none]
+[debug] [2025-03-28T11:43:58.162Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:43:58.162Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-03-28T11:44:00.177Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions 200
+[debug] [2025-03-28T11:44:00.177Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-03-28T11:44:00.177Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:00.177Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:00.177Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/event-management-1a68f/serviceAccounts/event-management-1a68f@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-03-28T11:44:00.178Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/event-management-1a68f/serviceAccounts/event-management-1a68f@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-03-28T11:44:01.837Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/event-management-1a68f/serviceAccounts/event-management-1a68f@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-03-28T11:44:01.837Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/event-management-1a68f/serviceAccounts/event-management-1a68f@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'event-management-1a68f'...
+[info] 
+[info] i  deploying functions 
+[debug] [2025-03-28T11:44:01.842Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:01.842Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:01.843Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f [none]
+[debug] [2025-03-28T11:44:02.166Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f 200
+[debug] [2025-03-28T11:44:02.166Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f {"projectNumber":"1044321113319","projectId":"event-management-1a68f","lifecycleState":"ACTIVE","name":"Event Management","labels":{"firebase":"enabled"},"createTime":"2024-08-01T12:59:09.842370Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:02.169Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:02.169Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:02.169Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:02.170Z] Checked if tokens are valid: true, expires at: 1743164382483
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:02.170Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:02.170Z] Checked if tokens are valid: true, expires at: 1743164382483
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:02.171Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:02.171Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:02.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-03-28T11:44:02.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:02.174Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-03-28T11:44:02.174Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:02.176Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudbuild.googleapis.com [none]
+[debug] [2025-03-28T11:44:02.176Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudbuild.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:02.178Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/artifactregistry.googleapis.com [none]
+[debug] [2025-03-28T11:44:02.178Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/artifactregistry.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:04.102Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/runtimeconfig.googleapis.com 200
+[debug] [2025-03-28T11:44:04.103Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-03-28T11:44:04.221Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/artifactregistry.googleapis.com 200
+[debug] [2025-03-28T11:44:04.221Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/artifactregistry.googleapis.com [omitted]
+[info] +  artifactregistry: required API artifactregistry.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:04.223Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudbuild.googleapis.com 200
+[debug] [2025-03-28T11:44:04.223Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudbuild.googleapis.com [omitted]
+[info] +  functions: required API cloudbuild.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:04.226Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudfunctions.googleapis.com 200
+[debug] [2025-03-28T11:44:04.226Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/cloudfunctions.googleapis.com [omitted]
+[info] +  functions: required API cloudfunctions.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:04.227Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:04.227Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:04.227Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/event-management-1a68f/adminSdkConfig [none]
+[debug] [2025-03-28T11:44:05.254Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/event-management-1a68f/adminSdkConfig 200
+[debug] [2025-03-28T11:44:05.254Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/event-management-1a68f/adminSdkConfig {"projectId":"event-management-1a68f","storageBucket":"event-management-1a68f.appspot.com","locationId":"us-central"}
+[debug] [2025-03-28T11:44:05.255Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.255Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.255Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs [none]
+[debug] [2025-03-28T11:44:05.833Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs 200
+[debug] [2025-03-28T11:44:05.833Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs {"configs":[{"name":"projects/event-management-1a68f/configs/paystack"},{"name":"projects/event-management-1a68f/configs/api"},{"name":"projects/event-management-1a68f/configs/email"},{"name":"projects/event-management-1a68f/configs/frontend"},{"name":"projects/event-management-1a68f/configs/jwt"},{"name":"projects/event-management-1a68f/configs/mongodb"}]}
+[debug] [2025-03-28T11:44:05.834Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.835Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.836Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:05.836Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables [none]
+[debug] [2025-03-28T11:44:05.836Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/api/variables [none]
+[debug] [2025-03-28T11:44:05.840Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables [none]
+[debug] [2025-03-28T11:44:05.842Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/frontend/variables [none]
+[debug] [2025-03-28T11:44:05.845Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/jwt/variables [none]
+[debug] [2025-03-28T11:44:05.847Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/mongodb/variables [none]
+[debug] [2025-03-28T11:44:06.221Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables 200
+[debug] [2025-03-28T11:44:06.222Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables {"variables":[{"name":"projects/event-management-1a68f/configs/paystack/variables/secretkey","updateTime":"2025-03-05T19:01:38.167360524Z"},{"name":"projects/event-management-1a68f/configs/paystack/variables/secret_key","updateTime":"2025-02-13T18:26:12.457177Z"}]}
+[debug] [2025-03-28T11:44:06.222Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.222Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.222Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.222Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.223Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables/secretkey [none]
+[debug] [2025-03-28T11:44:06.223Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables/secret_key [none]
+[debug] [2025-03-28T11:44:06.358Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/jwt/variables 200
+[debug] [2025-03-28T11:44:06.358Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/jwt/variables {"variables":[{"name":"projects/event-management-1a68f/configs/jwt/variables/secret","updateTime":"2025-03-05T19:00:44.182725788Z"}]}
+[debug] [2025-03-28T11:44:06.359Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.359Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.359Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/jwt/variables/secret [none]
+[debug] [2025-03-28T11:44:06.384Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/api/variables 200
+[debug] [2025-03-28T11:44:06.384Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/api/variables {"variables":[{"name":"projects/event-management-1a68f/configs/api/variables/baseurl","updateTime":"2025-03-05T18:54:18.845605702Z"}]}
+[debug] [2025-03-28T11:44:06.384Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.384Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.384Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/api/variables/baseurl [none]
+[debug] [2025-03-28T11:44:06.468Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/mongodb/variables 200
+[debug] [2025-03-28T11:44:06.468Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/mongodb/variables {"variables":[{"name":"projects/event-management-1a68f/configs/mongodb/variables/uri","updateTime":"2025-03-05T18:59:54.654383777Z"}]}
+[debug] [2025-03-28T11:44:06.468Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.468Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.468Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/mongodb/variables/uri [none]
+[debug] [2025-03-28T11:44:06.469Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables 200
+[debug] [2025-03-28T11:44:06.470Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables {"variables":[{"name":"projects/event-management-1a68f/configs/email/variables/pass","updateTime":"2025-01-01T22:52:22.620837416Z"},{"name":"projects/event-management-1a68f/configs/email/variables/password","updateTime":"2025-03-05T19:03:42.462838830Z"},{"name":"projects/event-management-1a68f/configs/email/variables/port","updateTime":"2025-03-06T14:50:25.305898312Z"},{"name":"projects/event-management-1a68f/configs/email/variables/user","updateTime":"2025-03-05T19:03:01.966399274Z"},{"name":"projects/event-management-1a68f/configs/email/variables/host","updateTime":"2025-03-06T14:51:13.923448792Z"}]}
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.470Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.471Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.471Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.471Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/pass [none]
+[debug] [2025-03-28T11:44:06.471Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/password [none]
+[debug] [2025-03-28T11:44:06.472Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/port [none]
+[debug] [2025-03-28T11:44:06.474Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/user [none]
+[debug] [2025-03-28T11:44:06.477Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/host [none]
+[debug] [2025-03-28T11:44:06.482Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/frontend/variables 200
+[debug] [2025-03-28T11:44:06.482Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/frontend/variables {"variables":[{"name":"projects/event-management-1a68f/configs/frontend/variables/url","updateTime":"2025-03-05T19:02:28.158038346Z"}]}
+[debug] [2025-03-28T11:44:06.483Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.483Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:06.483Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/frontend/variables/url [none]
+[debug] [2025-03-28T11:44:06.604Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables/secretkey 200
+[debug] [2025-03-28T11:44:06.604Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables/secretkey {"name":"projects/event-management-1a68f/configs/paystack/variables/secretkey","updateTime":"2025-03-05T19:01:38.167360524Z","text":"sk_live_4e7e68c9326b8564a7d46b766b09400a4b975992"}
+[debug] [2025-03-28T11:44:06.771Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/jwt/variables/secret 200
+[debug] [2025-03-28T11:44:06.772Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/jwt/variables/secret {"name":"projects/event-management-1a68f/configs/jwt/variables/secret","updateTime":"2025-03-05T19:00:44.182725788Z","text":"hello_world"}
+[debug] [2025-03-28T11:44:06.773Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/api/variables/baseurl 200
+[debug] [2025-03-28T11:44:06.773Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/api/variables/baseurl {"name":"projects/event-management-1a68f/configs/api/variables/baseurl","updateTime":"2025-03-05T18:54:18.845605702Z","text":"https://us-central1-event-management-1a68f.cloudfunctions.net/api"}
+[debug] [2025-03-28T11:44:06.823Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/pass 200
+[debug] [2025-03-28T11:44:06.823Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/pass {"name":"projects/event-management-1a68f/configs/email/variables/pass","updateTime":"2025-01-01T22:52:22.620837416Z"}
+[debug] [2025-03-28T11:44:06.825Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/mongodb/variables/uri 200
+[debug] [2025-03-28T11:44:06.825Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/mongodb/variables/uri {"name":"projects/event-management-1a68f/configs/mongodb/variables/uri","updateTime":"2025-03-05T18:59:54.654383777Z","text":"mongodb://event:123@ac-eg4umfm-shard-00-00.vltaguz.mongodb.net:27017,ac-eg4umfm-shard-00-01.vltaguz.mongodb.net:27017,ac-eg4umfm-shard-00-02.vltaguz.mongodb.net:27017/?ssl=true&replicaSet=atlas-f0gxxx-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0"}
+[debug] [2025-03-28T11:44:06.826Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/password 200
+[debug] [2025-03-28T11:44:06.826Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/password {"name":"projects/event-management-1a68f/configs/email/variables/password","updateTime":"2025-03-05T19:03:42.462838830Z","text":"gdthauotdxfxgwix"}
+[debug] [2025-03-28T11:44:06.828Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables/secret_key 200
+[debug] [2025-03-28T11:44:06.829Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/paystack/variables/secret_key {"name":"projects/event-management-1a68f/configs/paystack/variables/secret_key","updateTime":"2025-02-13T18:26:12.457177Z","text":"sk_live_4e7e68c9326b8564a7d46b766b09400a4b975992"}
+[debug] [2025-03-28T11:44:07.098Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/host 200
+[debug] [2025-03-28T11:44:07.099Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/host {"name":"projects/event-management-1a68f/configs/email/variables/host","updateTime":"2025-03-06T14:51:13.923448792Z","text":"smtp.gmail.com"}
+[debug] [2025-03-28T11:44:07.136Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/frontend/variables/url 200
+[debug] [2025-03-28T11:44:07.136Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/frontend/variables/url {"name":"projects/event-management-1a68f/configs/frontend/variables/url","updateTime":"2025-03-05T19:02:28.158038346Z","text":"www.eventcircle.site/"}
+[debug] [2025-03-28T11:44:07.137Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/user 200
+[debug] [2025-03-28T11:44:07.137Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/user {"name":"projects/event-management-1a68f/configs/email/variables/user","updateTime":"2025-03-05T19:03:01.966399274Z","text":"truecirclevents@gmail.com"}
+[debug] [2025-03-28T11:44:07.137Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/port 200
+[debug] [2025-03-28T11:44:07.138Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/event-management-1a68f/configs/email/variables/port {"name":"projects/event-management-1a68f/configs/email/variables/port","updateTime":"2025-03-06T14:50:25.305898312Z","text":"465"}
+[debug] [2025-03-28T11:44:07.141Z] Validating nodejs source
+[warn] !  functions: Runtime Node.js 18 will be deprecated on 2025-04-30 and will be decommissioned on 2025-10-31, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[debug] [2025-03-28T11:44:09.254Z] > [functions] package.json contents: {
+  "name": "event-management-api",
+  "version": "1.0.0",
+  "description": "Event Management API",
+  "main": "index.js",
+  "engines": {
+    "node": "18"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "vercel-build": "echo hello"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.3.0",
+    "firebase-functions": "^6.3.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "luxon": "^3.5.0",
+    "moment": "^2.30.1",
+    "mongoose": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.16"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
+[debug] [2025-03-28T11:44:09.255Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-03-28T11:44:09.258Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-03-28T11:44:09.272Z] Found firebase-functions binary at 'C:\Users\thand\3D Objects\EventsCircle-Fixed-main\backend\node_modules\.bin\firebase-functions'
+[info] Serving at port 8977
+
+[error] (node:6908) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[debug] [2025-03-28T11:44:12.288Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"api"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:22.306Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:22.306Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:22.307Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/firebaseextensions.googleapis.com [none]
+[debug] [2025-03-28T11:44:22.307Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/firebaseextensions.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:24.550Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/firebaseextensions.googleapis.com 200
+[debug] [2025-03-28T11:44:24.550Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/firebaseextensions.googleapis.com [omitted]
+[info] +  extensions: required API firebaseextensions.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:24.551Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-28T11:44:24.551Z] > authorizing via signed-in user (thanduxolomfusi@gmail.com)
+[debug] [2025-03-28T11:44:24.551Z] [iam] checking project event-management-1a68f for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2025-03-28T11:44:24.552Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:24.552Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:24.552Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions [none]
+[debug] [2025-03-28T11:44:24.552Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:24.552Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-03-28T11:44:26.155Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions 200
+[debug] [2025-03-28T11:44:26.155Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-03-28T11:44:26.156Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:26.156Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:26.156Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/event-management-1a68f/instances pageSize=100&pageToken=
+[debug] [2025-03-28T11:44:27.911Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/event-management-1a68f/instances 200
+[debug] [2025-03-28T11:44:27.911Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/event-management-1a68f/instances {}
+[info] i  functions: Loaded environment variables from .env. 
+[info] i  functions: preparing backend directory for uploading... 
+[info] i  functions: packaged C:\Users\thand\3D Objects\EventsCircle-Fixed-main\backend (82.65 KB) for uploading 
+[debug] [2025-03-28T11:44:28.126Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:28.127Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:28.127Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/event-management-1a68f/locations/-/functions [none]
+[debug] [2025-03-28T11:44:29.301Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/event-management-1a68f/locations/-/functions 200
+[debug] [2025-03-28T11:44:29.301Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/event-management-1a68f/locations/-/functions {}
+[debug] [2025-03-28T11:44:29.302Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:29.302Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:29.302Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/event-management-1a68f/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2025-03-28T11:44:30.500Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/event-management-1a68f/locations/-/functions 200
+[debug] [2025-03-28T11:44:30.501Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/event-management-1a68f/locations/-/functions {"functions":[{"name":"projects/event-management-1a68f/locations/us-central1/functions/testFunction","buildConfig":{"build":"projects/1044321113319/locations/us-central1/builds/e1611f40-1602-4703-a802-59c4a3b33a94","runtime":"nodejs20","entryPoint":"helloWorld","source":{"storageSource":{"bucket":"gcf-v2-sources-1044321113319-us-central1","object":"testFunction/function-source.zip","generation":"1738282376602077"}},"dockerRepository":"projects/event-management-1a68f/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-1044321113319-us-central1","object":"testFunction/function-source.zip","generation":"1738282376602077"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/event-management-1a68f/serviceAccounts/1044321113319-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"state":"FAILED","updateTime":"2025-02-11T13:05:49.844107262Z","labels":{"deployment-tool":"console-cloud"},"stateMessages":[{"severity":"ERROR","type":"CloudRunServiceNotFound","message":"Cloud Run service projects/event-management-1a68f/locations/us-central1/services/testfunction for the function was not found. The function will not work correctly. Please redeploy."}],"environment":"GEN_2","url":"https://us-central1-event-management-1a68f.cloudfunctions.net/testFunction","createTime":"2025-01-31T00:12:56.900163208Z","satisfiesPzi":true}]}
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:30.504Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:30.505Z] Checked if tokens are valid: true, expires at: 1743164382483
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:30.505Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:30.505Z] Checked if tokens are valid: true, expires at: 1743164382483
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:30.506Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:30.506Z] Checked if tokens are valid: true, expires at: 1743164382483
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[debug] [2025-03-28T11:44:30.506Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:30.506Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:30.507Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/run.googleapis.com [none]
+[debug] [2025-03-28T11:44:30.507Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/run.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:30.509Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/eventarc.googleapis.com [none]
+[debug] [2025-03-28T11:44:30.509Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/eventarc.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:30.512Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/pubsub.googleapis.com [none]
+[debug] [2025-03-28T11:44:30.512Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/pubsub.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:30.515Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/storage.googleapis.com [none]
+[debug] [2025-03-28T11:44:30.515Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/storage.googleapis.com x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:32.367Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/eventarc.googleapis.com 200
+[debug] [2025-03-28T11:44:32.367Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/eventarc.googleapis.com [omitted]
+[info] +  functions: required API eventarc.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:32.368Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/storage.googleapis.com 200
+[debug] [2025-03-28T11:44:32.369Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/storage.googleapis.com [omitted]
+[info] +  functions: required API storage.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:32.437Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/run.googleapis.com 200
+[debug] [2025-03-28T11:44:32.437Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/run.googleapis.com [omitted]
+[info] +  functions: required API run.googleapis.com is enabled 
+[debug] [2025-03-28T11:44:32.528Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/pubsub.googleapis.com 200
+[debug] [2025-03-28T11:44:32.528Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/event-management-1a68f/services/pubsub.googleapis.com [omitted]
+[info] +  functions: required API pubsub.googleapis.com is enabled 
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2025-03-28T11:44:32.530Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:32.530Z] Checked if tokens are valid: true, expires at: 1743164382483
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2025-03-28T11:44:32.530Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:32.530Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:32.530Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/1044321113319/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2025-03-28T11:44:32.531Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/1044321113319/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2025-03-28T11:44:34.175Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/1044321113319/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2025-03-28T11:44:34.175Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/1044321113319/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-1044321113319@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"100905611622041199458"}}
+[debug] [2025-03-28T11:44:34.246Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/1044321113319/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2025-03-28T11:44:34.247Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/1044321113319/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-1044321113319@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"111713325228567853086"}}
+[debug] [2025-03-28T11:44:34.249Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:34.249Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:34.249Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f [none]
+[debug] [2025-03-28T11:44:36.128Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f 200
+[debug] [2025-03-28T11:44:36.128Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f {"projectNumber":"1044321113319","projectId":"event-management-1a68f","lifecycleState":"ACTIVE","name":"Event Management","labels":{"firebase":"enabled"},"createTime":"2024-08-01T12:59:09.842370Z"}
+[debug] [2025-03-28T11:44:36.130Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:36.130Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:36.130Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/event-management-1a68f/billingInfo [none]
+[debug] [2025-03-28T11:44:36.794Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/event-management-1a68f/billingInfo 200
+[debug] [2025-03-28T11:44:36.794Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/event-management-1a68f/billingInfo {"name":"projects/event-management-1a68f/billingInfo","projectId":"event-management-1a68f","billingAccountName":"billingAccounts/019E16-B221D8-5E24FC","billingEnabled":true}
+[debug] [2025-03-28T11:44:36.796Z] [functions] found 1 new HTTP functions, testing setIamPolicy permission...
+[debug] [2025-03-28T11:44:36.796Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:36.796Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:36.796Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions [none]
+[debug] [2025-03-28T11:44:36.796Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions x-goog-quota-user=projects/event-management-1a68f
+[debug] [2025-03-28T11:44:36.796Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions {"permissions":["cloudfunctions.functions.setIamPolicy"]}
+[debug] [2025-03-28T11:44:37.164Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions 200
+[debug] [2025-03-28T11:44:37.164Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/event-management-1a68f:testIamPermissions {"permissions":["cloudfunctions.functions.setIamPolicy"]}
+[debug] [2025-03-28T11:44:37.165Z] [functions] found setIamPolicy permission, proceeding with deploy
+[debug] [2025-03-28T11:44:37.165Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:37.166Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:37.166Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/event-management-1a68f/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2025-03-28T11:44:38.302Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/event-management-1a68f/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2025-03-28T11:44:38.302Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/event-management-1a68f/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/gcf-v2-uploads-1044321113319.us-central1.cloudfunctions.appspot.com/0ce72fed-d101-4e95-86f8-bfc66e417912.zip?GoogleAccessId=service-1044321113319@gcf-admin-robot.iam.gserviceaccount.com&Expires=1743164078&Signature=5vfMg12WksOrkFbeiBA1Unglv7KhNSEGa1TgQUukU3I1MV5Uphjip0s3gwbuMEVt2AQ7fMXyoKI51J587fhnlNnoelf1dO6Vn%2BxUZht1txppv%2Be9fLVFF3YpGGzo7CAxCc3WJMZhpPyAa9kPbMk1oIsp34GWq4T5FJu%2FecJckZ6JFSxoSxBPZw%2BbCQic8uwUj8tp6sKdIdaggC0%2BHst9fpuVEURR7WitJ%2FTyPKgcl4UsIo2AyfUqM13srllnjjS2NX4UtvauileXaA9Muey%2F9E4CLBsuTCmJi4RT3sYj%2BDDrp8RLUUuT2dKVxTsHL4uEPdRk2dbVfU%2FcHTGwWFwxEw%3D%3D","storageSource":{"bucket":"gcf-v2-uploads-1044321113319.us-central1.cloudfunctions.appspot.com","object":"0ce72fed-d101-4e95-86f8-bfc66e417912.zip"}}
+[debug] [2025-03-28T11:44:38.304Z] >>> [apiv2][query] PUT https://storage.googleapis.com/gcf-v2-uploads-1044321113319.us-central1.cloudfunctions.appspot.com/0ce72fed-d101-4e95-86f8-bfc66e417912.zip GoogleAccessId=service-1044321113319%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1743164078&Signature=5vfMg12WksOrkFbeiBA1Unglv7KhNSEGa1TgQUukU3I1MV5Uphjip0s3gwbuMEVt2AQ7fMXyoKI51J587fhnlNnoelf1dO6Vn%2BxUZht1txppv%2Be9fLVFF3YpGGzo7CAxCc3WJMZhpPyAa9kPbMk1oIsp34GWq4T5FJu%2FecJckZ6JFSxoSxBPZw%2BbCQic8uwUj8tp6sKdIdaggC0%2BHst9fpuVEURR7WitJ%2FTyPKgcl4UsIo2AyfUqM13srllnjjS2NX4UtvauileXaA9Muey%2F9E4CLBsuTCmJi4RT3sYj%2BDDrp8RLUUuT2dKVxTsHL4uEPdRk2dbVfU%2FcHTGwWFwxEw%3D%3D
+[debug] [2025-03-28T11:44:38.304Z] >>> [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-1044321113319.us-central1.cloudfunctions.appspot.com/0ce72fed-d101-4e95-86f8-bfc66e417912.zip [stream]
+[debug] [2025-03-28T11:44:39.540Z] <<< [apiv2][status] PUT https://storage.googleapis.com/gcf-v2-uploads-1044321113319.us-central1.cloudfunctions.appspot.com/0ce72fed-d101-4e95-86f8-bfc66e417912.zip 200
+[debug] [2025-03-28T11:44:39.540Z] <<< [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-1044321113319.us-central1.cloudfunctions.appspot.com/0ce72fed-d101-4e95-86f8-bfc66e417912.zip [omitted]
+[info] +  functions: backend folder uploaded successfully 
+[info] i  functions: creating Node.js 18 (2nd Gen) function api(us-central1)... 
+[debug] [2025-03-28T11:44:39.555Z] Total Function Deployment time: 2
+[debug] [2025-03-28T11:44:39.555Z] 1 Functions Deployed
+[debug] [2025-03-28T11:44:39.555Z] 1 Functions Errored
+[debug] [2025-03-28T11:44:39.555Z] 0 Function Deployments Aborted
+[debug] [2025-03-28T11:44:39.555Z] Average Function Deployment time: 1
+[info] 
+[info] Functions deploy had errors with the following functions:
+	api(us-central1)
+[debug] [2025-03-28T11:44:39.562Z] Not printing URL for HTTPS function. Typically this means it didn't match a filter or we failed deployment
+[debug] [2025-03-28T11:44:39.563Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:39.563Z] Checked if tokens are valid: true, expires at: 1743164382483
+[debug] [2025-03-28T11:44:39.564Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/event-management-1a68f/locations/us-central1/repositories/gcf-artifacts [none]
+[debug] [2025-03-28T11:44:40.667Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/event-management-1a68f/locations/us-central1/repositories/gcf-artifacts 200
+[debug] [2025-03-28T11:44:40.668Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/event-management-1a68f/locations/us-central1/repositories/gcf-artifacts {"name":"projects/event-management-1a68f/locations/us-central1/repositories/gcf-artifacts","format":"DOCKER","description":"This repository is created and used by Cloud Functions for storing function docker images.","labels":{"goog-managed-by":"cloudfunctions"},"createTime":"2025-01-01T22:21:06.578492Z","updateTime":"2025-03-28T11:42:35.256717Z","mode":"STANDARD_REPOSITORY","cleanupPolicies":{"firebase-functions-cleanup":{"id":"firebase-functions-cleanup","action":"DELETE","condition":{"tagState":"ANY","olderThan":"172800s"}}},"sizeBytes":"95154039","vulnerabilityScanningConfig":{"lastEnableTime":"2025-01-01T22:20:57.694306728Z","enablementState":"SCANNING_DISABLED","enablementStateReason":"API containerscanning.googleapis.com is not enabled."},"satisfiesPzi":true,"registryUri":"us-central1-docker.pkg.dev/event-management-1a68f/gcf-artifacts"}
+[debug] [2025-03-28T11:44:40.668Z] Functions deploy failed.
+[debug] [2025-03-28T11:44:40.668Z] {}
+[debug] [2025-03-28T11:44:40.671Z] TypeError: Cannot read properties of null (reading 'length')
+    at Object.formatServiceAccount (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\gcp\proto.js:95:24)
+    at C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\gcp\cloudfunctionsv2.js:196:122
+    at Object.convertIfPresent (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\gcp\proto.js:45:25)
+    at Object.functionFromEndpoint (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\gcp\cloudfunctionsv2.js:196:11)
+    at Fabricator.createV2Function (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:233:35)
+    at Fabricator.createEndpoint (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:137:24)
+    at C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:103:64
+    at handle (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:89:23)
+    at Fabricator.applyChangeset (C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:103:26)
+    at C:\Users\thand\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:69:40
+[error] 
+[error] Error: There was an error deploying functions
+[debug] [2025-03-30T11:18:17.911Z] ----------------------------------------------------------------------
+[debug] [2025-03-30T11:18:17.914Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js use --add
+[debug] [2025-03-30T11:18:17.914Z] CLI Version:   14.0.1
+[debug] [2025-03-30T11:18:17.914Z] Platform:      win32
+[debug] [2025-03-30T11:18:17.914Z] Node Version:  v20.5.1
+[debug] [2025-03-30T11:18:17.914Z] Time:          Sun Mar 30 2025 16:48:17 GMT+0530 (India Standard Time)
+[debug] [2025-03-30T11:18:17.914Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-03-30T11:18:18.116Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-30T11:18:18.117Z] > authorizing via signed-in user (jayrathore.1010@gmail.com)
+[debug] [2025-03-30T11:18:18.118Z] Checked if tokens are valid: true, expires at: 1743337072667
+[debug] [2025-03-30T11:18:18.118Z] Checked if tokens are valid: true, expires at: 1743337072667
+[debug] [2025-03-30T11:18:18.120Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-03-30T11:18:19.169Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-03-30T11:18:19.169Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[debug] [2025-03-30T11:18:34.637Z] TypeError: Cannot read properties of undefined (reading 'value')
+    at ListPrompt.getCurrentValue (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\inquirer\lib\prompts\list.js:145:53)
+    at C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\map.js:10:37
+    at OperatorSubscriber._this._next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\OperatorSubscriber.js:33:21)
+    at Subscriber.next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\Subscriber.js:51:18)
+    at C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\take.js:15:32
+    at OperatorSubscriber._this._next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\OperatorSubscriber.js:33:21)
+    at Subscriber.next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\Subscriber.js:51:18)
+    at Interface.handler (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\observable\fromEvent.js:59:31)
+    at Interface.emit (node:events:526:35)
+    at Interface.emit (node:domain:489:12)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-03-30T11:18:45.038Z] ----------------------------------------------------------------------
+[debug] [2025-03-30T11:18:45.040Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js use --add
+[debug] [2025-03-30T11:18:45.041Z] CLI Version:   14.0.1
+[debug] [2025-03-30T11:18:45.041Z] Platform:      win32
+[debug] [2025-03-30T11:18:45.041Z] Node Version:  v20.5.1
+[debug] [2025-03-30T11:18:45.041Z] Time:          Sun Mar 30 2025 16:48:45 GMT+0530 (India Standard Time)
+[debug] [2025-03-30T11:18:45.041Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-03-30T11:18:45.235Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-30T11:18:45.236Z] > authorizing via signed-in user (jayrathore.1010@gmail.com)
+[debug] [2025-03-30T11:18:45.237Z] Checked if tokens are valid: true, expires at: 1743337072667
+[debug] [2025-03-30T11:18:45.237Z] Checked if tokens are valid: true, expires at: 1743337072667
+[debug] [2025-03-30T11:18:45.239Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-03-30T11:18:46.204Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-03-30T11:18:46.205Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[debug] [2025-03-30T11:18:46.217Z] TypeError: Cannot read properties of undefined (reading 'value')
+    at ListPrompt.getCurrentValue (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\inquirer\lib\prompts\list.js:145:53)
+    at C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\map.js:10:37
+    at OperatorSubscriber._this._next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\OperatorSubscriber.js:33:21)
+    at Subscriber.next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\Subscriber.js:51:18)
+    at C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\take.js:15:32
+    at OperatorSubscriber._this._next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\operators\OperatorSubscriber.js:33:21)
+    at Subscriber.next (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\Subscriber.js:51:18)
+    at Interface.handler (C:\Softwares\nvm\v20.5.1\node_modules\firebase-tools\node_modules\rxjs\dist\cjs\internal\observable\fromEvent.js:59:31)
+    at Interface.emit (node:events:526:35)
+    at Interface.emit (node:domain:489:12)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-03-30T11:18:54.030Z] ----------------------------------------------------------------------
+[debug] [2025-03-30T11:18:54.032Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js use --add
+[debug] [2025-03-30T11:18:54.033Z] CLI Version:   14.0.1
+[debug] [2025-03-30T11:18:54.033Z] Platform:      win32
+[debug] [2025-03-30T11:18:54.033Z] Node Version:  v20.5.1
+[debug] [2025-03-30T11:18:54.033Z] Time:          Sun Mar 30 2025 16:48:54 GMT+0530 (India Standard Time)
+[debug] [2025-03-30T11:18:54.033Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-03-30T11:18:54.220Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-30T11:18:54.220Z] > authorizing via signed-in user (jayrathore.1010@gmail.com)
+[debug] [2025-03-30T11:18:54.222Z] Checked if tokens are valid: true, expires at: 1743337072667
+[debug] [2025-03-30T11:18:54.222Z] Checked if tokens are valid: true, expires at: 1743337072667
+[debug] [2025-03-30T11:18:54.223Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-03-30T11:18:55.269Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-03-30T11:18:55.269Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
