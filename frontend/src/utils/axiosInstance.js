@@ -6,7 +6,7 @@ const MAX_RETRIES = 2;
 const axiosInstance = axios.create({
  // baseURL: 'https://eventcirclebackend.vercel.app/api/',
   // baseURL: 'http://localhost:4000/api/',
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: import.meta.env.VITE_REACT_APP_BACKEND_BASEURL,
   headers: {
     'Content-Type': 'application/json',
   },
