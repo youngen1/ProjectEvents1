@@ -294,26 +294,86 @@ export default function AddNewEvent() {
   });
 
   // ... (rest of handleSelect, handleCancel, categories, options remain the same)
-   const handleSelect = async (value) => {
-    try {
-        const results = await geocodeByAddress(value);
-        if (results && results.length > 0) {
-            const latLng = await getLatLng(results[0]);
-            setAddress(value);
-            setCoordinates(latLng);
-            formik.setFieldValue("event_address", value); // Keep this simple for display/validation
-        } else {
-             toast.error("Could not find coordinates for the selected address.");
-             setAddress(value); // Still set address for display
-             formik.setFieldValue("event_address", value);
-        }
-    } catch (error) {
-         console.error('Error during geocoding:', error);
-         toast.error("Error finding coordinates for the address.");
-         setAddress(value); // Still set address for display
-         formik.setFieldValue("event_address", value);
+  const handleSelect = async (value) => {
+  console.log('[Address Selection] Starting handleSelect with value:', value);
+  
+  try {
+    // 1. Check if Google Maps API is loaded
+    if (!window.google) {
+      const errorMsg = 'Google Maps API not loaded - window.google is undefined';
+      console.error(errorMsg);
+      toast.error('Map services not available. Please refresh the page.');
+      throw new Error(errorMsg);
+    } else {
+      console.log('[Google API] window.google exists:', window.google);
     }
-  };
+
+    // 2. Log before geocoding
+    console.log('[Geocoding] Starting geocodeByAddress for:', value);
+    const results = await geocodeByAddress(value);
+    console.log('[Geocoding] Results:', results);
+
+    if (results && results.length > 0) {
+      console.log('[Geocoding] First result geometry:', results[0].geometry);
+      
+      // 3. Log before getting lat/lng
+      console.log('[Coordinates] Getting lat/lng...');
+      const latLng = await getLatLng(results[0]);
+      console.log('[Coordinates] Received:', latLng);
+
+      setAddress(value);
+      setCoordinates(latLng);
+      formik.setFieldValue("event_address", value);
+      console.log('[State Update] Address and coordinates set successfully');
+    } else {
+      const errorMsg = 'No results returned from geocoding';
+      console.warn(errorMsg, results);
+      toast.error("Could not find coordinates for the selected address.");
+      setAddress(value);
+      formik.setFieldValue("event_address", value);
+    }
+  } catch (error) {
+    console.error(
+      '[Error] Full geocoding error:',
+      error,
+      '\nError details:',
+      error.message,
+      '\nStack:',
+      error.stack
+    );
+    
+    // Enhanced error logging
+    if (error.message.includes('InvalidValueError')) {
+      console.error('[Google API] Likely API key or quota issue');
+    } else if (error.message.includes('ZERO_RESULTS')) {
+      console.warn('[Google API] No results for this address');
+    }
+
+    toast.error("Error processing address. See console for details.");
+    setAddress(value);
+    formik.setFieldValue("event_address", value);
+  }
+};
+  //  const handleSelect = async (value) => {
+  //   try {
+  //       const results = await geocodeByAddress(value);
+  //       if (results && results.length > 0) {
+  //           const latLng = await getLatLng(results[0]);
+  //           setAddress(value);
+  //           setCoordinates(latLng);
+  //           formik.setFieldValue("event_address", value); // Keep this simple for display/validation
+  //       } else {
+  //            toast.error("Could not find coordinates for the selected address.");
+  //            setAddress(value); // Still set address for display
+  //            formik.setFieldValue("event_address", value);
+  //       }
+  //   } catch (error) {
+  //        console.error('Error during geocoding:', error);
+  //        toast.error("Error finding coordinates for the address.");
+  //        setAddress(value); // Still set address for display
+  //        formik.setFieldValue("event_address", value);
+  //   }
+  // };
 
   const handleCancel = () => {
      formik.resetForm();
