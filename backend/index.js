@@ -164,8 +164,6 @@
 
 // exports.api = functions.https.onRequest(app);
 
-
-
 require('dotenv').config(); // This must be at the very top
 require('./models/User');
 require('./models/Event');
@@ -181,7 +179,7 @@ const app = express();
 
 // CORS configuration - update origins for production
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL, 'https://project-events1-86ns.vercel.app']
+  ? [process.env.PRODUCTION_FRONTEND_URL, 'https://your-production-domain.com']
   : ['http://localhost:5173'];
 
 const corsOptions = {
@@ -286,4 +284,20 @@ app.use((err, req, res, next) => {
   console.log("==================\n");
 
   res.status(500).json({
-    error: 'Internal Server Error
+    error: 'Internal Server Error',
+    message: err.message || 'Something went wrong',
+    details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
+// Local development server
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`CORS configured for: ${allowedOrigins.join(', ')}`);
+  });
+}
+
+// Export for Vercel
+module.exports = app;
