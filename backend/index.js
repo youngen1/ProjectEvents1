@@ -179,7 +179,7 @@ const app = express();
 
 // CORS configuration - update origins for production
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL, 'https://project-events1-86ns.vercel.app']
+  ? [process.env.FRONTEND_URL, 'https://project-events1-86ns.vercel.app' , 'https://www.eventcircle.site']
   : ['http://localhost:5173'];
 
 const corsOptions = {
