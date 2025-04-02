@@ -1293,6 +1293,8 @@ exports.getPlatformEarnings = async (req, res) => {
         // aggregate returns an array, take the first element (or default)
         const result = platformEarningsResult[0] || { totalEarnings: 0, earnings: [] };
 
+      console.log(" the result of platform earning : " , result);
+
         res.status(200).json(result);
 
     } catch (error) {
