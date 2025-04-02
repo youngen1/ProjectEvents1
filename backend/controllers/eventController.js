@@ -614,6 +614,8 @@ exports.bookEvent = async (req, res) => {
 
       console.log(" the event :- " , event , " and the gender restriction :- " , event.gender_restriction)
       console.log(" user's gender :- " , user.gender , " is gender_restriction an array ? " , Array.isArray(event.gender_restriction))
+      console.log(" does it include a normal string ? " ,  event.gender_restriction.includes("abcd") );
+      console.log(" does it include user.gender ? " ,  event.gender_restriction.includes(user.gender) );
 if (user.gender && Array.isArray(event.gender_restriction) && event.gender_restriction.includes(user.gender)) {
     return res.status(403).json({ message: "This event has gender restrictions you do not meet." });
 }
