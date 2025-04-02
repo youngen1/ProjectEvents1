@@ -17,15 +17,18 @@ const VerifyPayment = () => {
 
             try {
                 const response = await axiosInstance.get(`/events/payment/verify?reference=${reference}&eventId=${eventId}&userId=${userId}`);
-                if (response.data.message === 'Ticket booked successfully') {
-                    toast.success('Payment successful! Ticket booked.');
+                if (response.data.success) {
+                    toast.success(response.data.message);
+                    window.location.href = response.data.redirectUrl;
                 } else {
-                    toast.error('Payment verification failed.');
+                    toast.error(response.data.message);
+                    window.location.href = response.data.redirectUrl;
                 }
-                navigate(`/single-event/${eventId}`);
             } catch (error) {
-                console.error(error);
                 toast.error('An error occurred while verifying the payment.');
+                window.location.href = error.response?.data?.redirectUrl 
+                    || `${FRONTEND_URL}/payment-failed?reason=unknown_error`;
+                
             }
         };
 
