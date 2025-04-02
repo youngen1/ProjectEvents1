@@ -13,6 +13,7 @@ const Ticket = require("../models/Ticket");
 const functions = require("firebase-functions")
 const JWT_SECRET = process.env.JWT_SECRET;
 const mongoose = require('mongoose');
+
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
 const EMAIL_HOST = process.env.EMAIL_HOST;
