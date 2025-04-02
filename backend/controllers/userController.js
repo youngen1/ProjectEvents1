@@ -593,6 +593,7 @@ exports.requestPasswordReset = async (req, res) => {
 
     // Send password reset email
     const resetLink = `${FRONTEND_URL}/reset-password/${token}`;
+    console.log(" the reset link :- ", resetLink);
     const transporter = nodemailer.createTransport({
       host: EMAIL_HOST,
       port: EMAIL_PORT,
