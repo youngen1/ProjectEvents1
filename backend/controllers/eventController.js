@@ -512,10 +512,10 @@ exports.getEvents = async (req, res) => {
 
         // Add sorting and pagination
         pipeline.push(
-            { $sort: { event_date_and_time: 1 } },
-            { $skip: skip },
-            { $limit: limit }
-        );
+    { $sort: { createdAt: -1 } }, // Sort by newest first based on creation timestamp
+    { $skip: skip },
+    { $limit: limit }
+);
 
         // Execute both pipelines in parallel
         const [events, countResult] = await Promise.all([
