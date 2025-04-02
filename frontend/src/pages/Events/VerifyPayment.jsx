@@ -19,15 +19,14 @@ const VerifyPayment = () => {
                 const response = await axiosInstance.get(`/events/payment/verify?reference=${reference}&eventId=${eventId}&userId=${userId}`);
                 if (response.data.success) {
                     toast.success(response.data.message);
-                    window.location.href = response.data.redirectUrl;
+                    window.location.href = `https://www.eventcircle.site/single-event/${eventId}`;
                 } else {
                     toast.error(response.data.message);
-                    window.location.href = response.data.redirectUrl;
+                    window.location.href = `https://www.eventcircle.site/single-event/${eventId}`;
                 }
             } catch (error) {
                 toast.error('An error occurred while verifying the payment.');
-                window.location.href = error.response?.data?.redirectUrl 
-                    || `${FRONTEND_URL}/payment-failed?reason=unknown_error`;
+                window.location.href = error.response?.data?.redirectUrl ;
                 
             }
         };
