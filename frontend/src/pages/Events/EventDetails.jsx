@@ -75,7 +75,12 @@ const EventDetails = () => {
     } else if(eventDetails.event_max_capacity - eventDetails.booked_tickets.length === 0) {
       toast.error("Event is fully booked");
 
-    } else {
+    } else if(eventDetails.booked_tickets.includes(user?._id)){
+     
+        toast.error("You already have a ticket for this event");
+        return;
+    
+    }  else {
       try {
         const res = await axiosInstance.post(`/events/book/${eventId}`);
         if (res?.data?.authorization_url) {
