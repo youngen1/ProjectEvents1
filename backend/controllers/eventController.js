@@ -611,6 +611,8 @@ exports.bookEvent = async (req, res) => {
         // Gender Check (Only restrict if user's gender is explicitly listed for restriction)
         // Assumes gender_restriction holds genders NOT allowed (adjust if it means ONLY allowed)
       // Gender Check (Only restrict if user's gender is explicitly listed for restriction)
+
+      console.log(" the event :- " , event , " and the gender restriction :- " , event.gender_restriction)
 if (user.gender && Array.isArray(event.gender_restriction) && event.gender_restriction.includes(user.gender)) {
     return res.status(403).json({ message: "This event has gender restrictions you do not meet." });
 }
