@@ -525,7 +525,7 @@ exports.getUserById = async (req, res) => {
         return res.status(400).json({ message: 'Invalid user ID format' }); // 400 Bad Request
     }
     const user = await User.findById(userId)
-      .select("fullname username email profile_picture followers following my_tickets role")
+      .select("fullname username email profile_picture followers following my_tickets role total_earnings")
       .populate({
         path: "followers following",
         select: "fullname username profile_picture role"
