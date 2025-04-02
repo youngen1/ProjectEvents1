@@ -638,7 +638,7 @@ if (user.gender && Array.isArray(event.gender_restriction) && event.gender_restr
         }
 
         // Ensure ticket price is handled correctly (e.g., convert to kobo for Paystack)
-        const amountInKobo = Math.round(event.ticket_price * 100);
+        const amountInKobo = event.ticket_price;
         if (amountInKobo <= 0) {
 
              return res.status(400).json({ message: "Ticket price must be greater than zero to initiate payment." });
