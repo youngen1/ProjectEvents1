@@ -19,9 +19,11 @@ const VerifyPayment = () => {
                 const response = await axiosInstance.get(`/events/payment/verify?reference=${reference}&eventId=${eventId}&userId=${userId}`);
                 if (response.data.success) {
                     toast.success(response.data.message);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                     window.location.href = `https://www.eventcircle.site/single-event/${eventId}`;
                 } else {
                     toast.error(response.data.message);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                     window.location.href = `https://www.eventcircle.site/single-event/${eventId}`;
                 }
             } catch (error) {
