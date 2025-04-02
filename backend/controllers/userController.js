@@ -641,8 +641,8 @@ exports.resetPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Invalid token or user not found" });
     }
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    
+    user.password = newPassword;
 
     await user.save();
 
