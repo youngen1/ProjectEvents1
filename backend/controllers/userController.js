@@ -678,6 +678,7 @@ exports.changePasswordAfterLogin = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   try {
+    console.log(" currentPassword " , currentPassword , " and newPassword " , newPassword);
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -685,6 +686,7 @@ exports.changePasswordAfterLogin = async (req, res) => {
 
     // Verify current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
+    console.log(" value of is match " , isMatch);
     if (!isMatch) {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
@@ -693,6 +695,7 @@ exports.changePasswordAfterLogin = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     user.password = hashedPassword;
+    console.log(" the new hashed password " , hashedPassword);
     await user.save();
 
     res.status(200).json({ message: "Password changed successfully" });
