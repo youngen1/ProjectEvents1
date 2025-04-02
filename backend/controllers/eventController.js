@@ -668,104 +668,236 @@ if (user.gender && Array.isArray(event.gender_restriction) && event.gender_restr
 
 
 // --- Verify Payment Callback (Handles Booking Logic Post-Payment) ---
+// exports.verifyPaymentCallback = async (req, res) => {
+//     const { reference, eventId, userId } = req.query;
+
+//     if (!reference || !eventId || !userId) {
+//         return res.status(400).json({ message: "Missing required query parameters (reference, eventId, userId)." });
+//     }
+
+//     // Validate IDs
+//     if (!mongoose.Types.ObjectId.isValid(eventId) || !mongoose.Types.ObjectId.isValid(userId)) {
+//         return res.status(400).json({ message: "Invalid Event or User ID format." });
+//     }
+
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
+
+//     try {
+//         // --- Verify Payment with Paystack ---
+//         console.log(`Verifying payment with reference: ${reference}`);
+//         const paymentVerification = await verifyPayment(reference);
+
+//         // Check Paystack response structure and status
+//         if (!paymentVerification || !paymentVerification.status || !paymentVerification.data || paymentVerification.data.status !== "success") {
+//             console.error("Payment verification failed or invalid response:", paymentVerification);
+//             await session.abortTransaction();
+//             session.endSession();
+//             // Redirect user to a failure page on the frontend
+//             return res.redirect(`${FRONTEND_URL}/payment-failed?reason=verification_failed`);
+//             // OR return res.status(400).json({ message: "Payment verification failed" });
+//         }
+
+//         console.log("Payment verification successful.");
+//         const expectedAmountKobo = Math.round(paymentVerification.data.amount); // Amount is in kobo from Paystack
+
+//         // --- Fetch Event and User (within transaction) ---
+//         // Select fields needed for update to minimize data transfer
+//         const event = await Event.findById(eventId)
+//             .select('event_max_capacity booked_tickets created_by ticket_price ticketsSold') // Added ticketsSold
+//             .session(session);
+
+//         if (!event) {
+//             throw new Error("Event not found during verification."); // Throw error to abort transaction
+//         }
+
+//         // --- Cross-check Payment Amount (Important!) ---
+//         const eventPriceKobo = Math.round(event.ticket_price * 100);
+//         if (expectedAmountKobo !== eventPriceKobo) {
+//              console.warn(`Payment amount mismatch! Expected ${eventPriceKobo} kobo, received ${expectedAmountKobo} kobo for reference ${reference}.`);
+//              // Decide how to handle: abort, log, flag? Aborting is safest.
+//              throw new Error("Payment amount mismatch.");
+//         }
+
+//         // --- Check Capacity and if User Already Booked (Idempotency) ---
+//         if (event.event_max_capacity <= 0) {
+//             console.warn(`Attempted booking for full event (ID: ${eventId}) after payment success (Ref: ${reference}).`);
+//             // Decide how to handle: maybe refund is needed? For now, abort.
+//             throw new Error("Event is fully booked (capacity check failed post-payment).");
+//         }
+//         if (event.booked_tickets.map(id => id.toString()).includes(userId)) {
+//             console.warn(`User ${userId} already booked event ${eventId} (Ref: ${reference}). Possible duplicate callback.`);
+//             // If already booked, commit transaction without changes? Or abort?
+//             // Safest is often to commit if the state is already correct, preventing multiple charges.
+//             // Let's assume idempotency: if already booked, treat as success without modification.
+//              await session.commitTransaction();
+//              session.endSession();
+//              console.log("User already booked, considered successful (idempotency).");
+//               // Redirect user to a success page
+//              return res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
+//              // OR return res.status(200).json({ message: "Already booked", eventId: eventId });
+//         }
+
+//         // --- Update Event and User ---
+//         event.booked_tickets.push(userId);
+//         event.event_max_capacity -= 1;
+//         event.ticketsSold += 1; // Increment ticketsSold
+//         await event.save({ session });
+
+//         const userUpdateResult = await User.updateOne(
+//             { _id: userId },
+//             { $addToSet: { my_tickets: eventId } } // Use $addToSet to prevent duplicates
+//         ).session(session);
+
+//          if (userUpdateResult.matchedCount === 0) {
+//              throw new Error("User not found for updating tickets.");
+//          }
+
+//         // --- Update Creator Earnings and Platform Commission ---
+//         const eventCreator = await User.findById(event.created_by).select('total_earnings').session(session);
+//         if (!eventCreator) {
+//              throw new Error("Event creator not found.");
+//         }
+//         const ticketPrice = event.ticket_price;
+//         const platformCommissionRate = 0.13; // 13%
+//         const platformCommission = ticketPrice * platformCommissionRate;
+//         const earnings = ticketPrice - platformCommission;
+
+//         eventCreator.total_earnings = (eventCreator.total_earnings || 0) + earnings;
+//         await eventCreator.save({ session });
+
+//         const platformEarning = new PlatformEarning({
+//             event: eventId,
+//             amount: platformCommission,
+//             transaction_date: new Date(),
+//         });
+//         await platformEarning.save({ session });
+
+//         console.log(`Booking successful for User ${userId}, Event ${eventId}.`);
+
+//         // --- Commit Transaction ---
+//         await session.commitTransaction();
+//         session.endSession();
+
+//         // --- Redirect to Frontend Success Page ---
+//         // Sending JSON is less common for backend redirects after payment
+//         res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
+
+//     } catch (error) {
+//         console.error("Error during payment verification/booking:", error);
+//         // Ensure transaction is aborted on any error
+//         if (session.inTransaction()) {
+//             await session.abortTransaction();
+//         }
+//         session.endSession();
+//          // Redirect user to a failure page
+//         res.redirect(`${FRONTEND_URL}/payment-failed?reason=${encodeURIComponent(error.message || 'internal_error')}`);
+//         // OR res.status(500).json({ message: "An error occurred during payment verification.", details: error.message });
+//     }
+// };
+
 exports.verifyPaymentCallback = async (req, res) => {
+    console.log("Received request for payment verification with query params:", req.query);
     const { reference, eventId, userId } = req.query;
 
     if (!reference || !eventId || !userId) {
+        console.error("Missing required query parameters!", { reference, eventId, userId });
         return res.status(400).json({ message: "Missing required query parameters (reference, eventId, userId)." });
     }
 
-    // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(eventId) || !mongoose.Types.ObjectId.isValid(userId)) {
+        console.error("Invalid ID format detected:", { eventId, userId });
         return res.status(400).json({ message: "Invalid Event or User ID format." });
     }
 
+    console.log("Starting database transaction...");
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        // --- Verify Payment with Paystack ---
-        console.log(`Verifying payment with reference: ${reference}`);
+        console.log(`Verifying payment with Paystack. Reference: ${reference}`);
         const paymentVerification = await verifyPayment(reference);
+        console.log("Paystack response:", JSON.stringify(paymentVerification, null, 2));
 
-        // Check Paystack response structure and status
         if (!paymentVerification || !paymentVerification.status || !paymentVerification.data || paymentVerification.data.status !== "success") {
-            console.error("Payment verification failed or invalid response:", paymentVerification);
+            console.error("Payment verification failed! Response:", paymentVerification);
             await session.abortTransaction();
             session.endSession();
-            // Redirect user to a failure page on the frontend
             return res.redirect(`${FRONTEND_URL}/payment-failed?reason=verification_failed`);
-            // OR return res.status(400).json({ message: "Payment verification failed" });
         }
 
-        console.log("Payment verification successful.");
-        const expectedAmountKobo = Math.round(paymentVerification.data.amount); // Amount is in kobo from Paystack
+        console.log("Payment verification successful!");
+        const expectedAmountKobo = Math.round(paymentVerification.data.amount);
 
-        // --- Fetch Event and User (within transaction) ---
-        // Select fields needed for update to minimize data transfer
+        console.log("Fetching event details from database...");
         const event = await Event.findById(eventId)
-            .select('event_max_capacity booked_tickets created_by ticket_price ticketsSold') // Added ticketsSold
+            .select('event_max_capacity booked_tickets created_by ticket_price ticketsSold')
             .session(session);
 
         if (!event) {
-            throw new Error("Event not found during verification."); // Throw error to abort transaction
+            console.error("Event not found in the database!", { eventId });
+            throw new Error("Event not found during verification.");
         }
 
-        // --- Cross-check Payment Amount (Important!) ---
         const eventPriceKobo = Math.round(event.ticket_price * 100);
         if (expectedAmountKobo !== eventPriceKobo) {
-             console.warn(`Payment amount mismatch! Expected ${eventPriceKobo} kobo, received ${expectedAmountKobo} kobo for reference ${reference}.`);
-             // Decide how to handle: abort, log, flag? Aborting is safest.
-             throw new Error("Payment amount mismatch.");
+            console.warn("Payment amount mismatch!", {
+                expected: eventPriceKobo,
+                received: expectedAmountKobo,
+                reference
+            });
+            throw new Error("Payment amount mismatch.");
         }
 
-        // --- Check Capacity and if User Already Booked (Idempotency) ---
+        console.log("Checking if event is fully booked or user already has a ticket...");
         if (event.event_max_capacity <= 0) {
-            console.warn(`Attempted booking for full event (ID: ${eventId}) after payment success (Ref: ${reference}).`);
-            // Decide how to handle: maybe refund is needed? For now, abort.
-            throw new Error("Event is fully booked (capacity check failed post-payment).");
+            console.warn("Event is already at full capacity!", { eventId });
+            throw new Error("Event is fully booked.");
         }
-        if (event.booked_tickets.map(id => id.toString()).includes(userId)) {
-            console.warn(`User ${userId} already booked event ${eventId} (Ref: ${reference}). Possible duplicate callback.`);
-            // If already booked, commit transaction without changes? Or abort?
-            // Safest is often to commit if the state is already correct, preventing multiple charges.
-            // Let's assume idempotency: if already booked, treat as success without modification.
-             await session.commitTransaction();
-             session.endSession();
-             console.log("User already booked, considered successful (idempotency).");
-              // Redirect user to a success page
-             return res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
-             // OR return res.status(200).json({ message: "Already booked", eventId: eventId });
+        if (event.booked_tickets.includes(userId)) {
+            console.warn("User already booked this event!", { userId, eventId });
+            await session.commitTransaction();
+            session.endSession();
+            return res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
         }
 
-        // --- Update Event and User ---
+        console.log("Updating event and user details...");
         event.booked_tickets.push(userId);
         event.event_max_capacity -= 1;
-        event.ticketsSold += 1; // Increment ticketsSold
+        event.ticketsSold += 1;
         await event.save({ session });
 
         const userUpdateResult = await User.updateOne(
             { _id: userId },
-            { $addToSet: { my_tickets: eventId } } // Use $addToSet to prevent duplicates
+            { $addToSet: { my_tickets: eventId } }
         ).session(session);
 
-         if (userUpdateResult.matchedCount === 0) {
-             throw new Error("User not found for updating tickets.");
-         }
-
-        // --- Update Creator Earnings and Platform Commission ---
-        const eventCreator = await User.findById(event.created_by).select('total_earnings').session(session);
-        if (!eventCreator) {
-             throw new Error("Event creator not found.");
+        if (userUpdateResult.matchedCount === 0) {
+            console.error("User not found while updating tickets!", { userId });
+            throw new Error("User not found for updating tickets.");
         }
+
+        console.log("Fetching event creator details...");
+        const eventCreator = await User.findById(event.created_by)
+            .select('total_earnings')
+            .session(session);
+
+        if (!eventCreator) {
+            console.error("Event creator not found!", { eventCreatorId: event.created_by });
+            throw new Error("Event creator not found.");
+        }
+
+        console.log("Calculating earnings...");
         const ticketPrice = event.ticket_price;
-        const platformCommissionRate = 0.13; // 13%
+        const platformCommissionRate = 0.13;
         const platformCommission = ticketPrice * platformCommissionRate;
         const earnings = ticketPrice - platformCommission;
 
+        console.log("Updating event creator earnings...");
         eventCreator.total_earnings = (eventCreator.total_earnings || 0) + earnings;
         await eventCreator.save({ session });
 
+        console.log("Recording platform commission...");
         const platformEarning = new PlatformEarning({
             event: eventId,
             amount: platformCommission,
@@ -773,26 +905,20 @@ exports.verifyPaymentCallback = async (req, res) => {
         });
         await platformEarning.save({ session });
 
-        console.log(`Booking successful for User ${userId}, Event ${eventId}.`);
-
-        // --- Commit Transaction ---
+        console.log("Booking successful! User and event details updated.", { userId, eventId });
         await session.commitTransaction();
         session.endSession();
 
-        // --- Redirect to Frontend Success Page ---
-        // Sending JSON is less common for backend redirects after payment
-        res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
+        return res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
 
     } catch (error) {
-        console.error("Error during payment verification/booking:", error);
-        // Ensure transaction is aborted on any error
+        console.error("Critical error during payment verification!", error);
         if (session.inTransaction()) {
+            console.log("Aborting transaction...");
             await session.abortTransaction();
         }
         session.endSession();
-         // Redirect user to a failure page
-        res.redirect(`${FRONTEND_URL}/payment-failed?reason=${encodeURIComponent(error.message || 'internal_error')}`);
-        // OR res.status(500).json({ message: "An error occurred during payment verification.", details: error.message });
+        return res.redirect(`${FRONTEND_URL}/payment-failed?reason=${encodeURIComponent(error.message || 'internal_error')}`);
     }
 };
 
