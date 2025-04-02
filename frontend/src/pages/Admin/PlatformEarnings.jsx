@@ -12,7 +12,7 @@ const PlatformEarnings = () => {
         const fetchEarnings = async () => {
             try {
                
-                const response = await axiosInstance.get('/api/events/platform-earnings');
+                const response = await axiosInstance.get('/api/events/admin/earnings');
                 if (response.data) {
                     setEarnings(response.data);
                 } else {
