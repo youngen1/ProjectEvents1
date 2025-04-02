@@ -693,11 +693,8 @@ exports.changePasswordAfterLogin = async (req, res) => {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    user.password = hashedPassword;
-    console.log(" the new hashed password " , hashedPassword);
+    
+    user.password = newPassword;
     await user.save();
 
     res.status(200).json({ message: "Password changed successfully" });
