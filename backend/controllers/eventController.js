@@ -615,6 +615,21 @@ exports.bookEvent = async (req, res) => {
         }
 
         // --- Initiate Payment ---
+      if (event.ticket_price === 0) {
+            // Check if user is already booked
+            if (event.booked_tickets.includes(userId)) {
+                return res.status(400).json({ message: "You have already booked this event." });
+            }
+
+            // Add user to booked tickets
+            await Event.findByIdAndUpdate(eventId, {
+                $push: { booked_tickets: userId },
+                $inc: { ticketsSold: 1 }
+            });
+
+            return res.status(200).json({ message: "You have successfully booked this free event." });
+        }
+
         // Ensure ticket price is handled correctly (e.g., convert to kobo for Paystack)
         const amountInKobo = Math.round(event.ticket_price * 100);
         if (amountInKobo <= 0) {
