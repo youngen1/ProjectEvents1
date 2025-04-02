@@ -72,6 +72,7 @@ const EventDetails = () => {
   const handleBookTicket = async (eventId) => {
     console.log(" array of booked tickets ", eventDetails?.booked_tickets);
     console.log(" current userid ", user?._id);
+    return;
     if (user?._id === eventDetails?.created_by?._id) {
       toast.error("You cannot buy/book your own ticket");
     } else if(eventDetails.event_max_capacity - eventDetails.booked_tickets.length === 0) {
