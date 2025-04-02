@@ -25,7 +25,7 @@ const UserEvents = ({ events, isOwnProfile, onDeleteEvent }) => {
     const shareData = {
       title: event.event_title,
       text: event.event_description,
-      url: window.location.origin + `/events/${event?._id}`,
+      url: window.location.origin + `/single-event/${event?._id}`,
     };
 
     if (navigator.share) {
