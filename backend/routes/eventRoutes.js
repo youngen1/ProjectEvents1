@@ -42,7 +42,7 @@ router.post('/book/:eventId', authMiddleware, eventController.bookEvent);
 router.get('/payment/verify', eventController.verifyPaymentCallback); // Added based on controller
 
 // Get events created/booked by the logged-in user (protected)
-router.get('/get-my-events', authMiddleware, eventController.getUserEvents);
+router.get('/getUserEvents', authMiddleware, eventController.getUserEvents);
 
 // Get event guests (protected - adjust auth if needed)
 router.get('/guests/:eventId', authMiddleware, eventController.getEventGuests);
