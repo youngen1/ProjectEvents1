@@ -76,7 +76,7 @@ const UserEvents = ({ events, isOwnProfile, onDeleteEvent }) => {
           )}
         </div>
         <div
-          onClick={() => navigate(`/events/${event?._id}`)}
+          onClick={() => navigate(`/single-event/${event?._id}`)}
           className="p-4 cursor-pointer"
         >
           <div className="flex justify-between items-center mb-2">
