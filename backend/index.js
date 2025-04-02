@@ -178,6 +178,7 @@ const path = require("path");
 
 
 
+if (!admin.apps.length) {
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: "event-management-1a68f",
@@ -186,6 +187,7 @@ admin.initializeApp({
   }),
   storageBucket: "event-management-1a68f.appspot.com"
 });
+}
 
 const app = express();
 const allowedOrigins = [
