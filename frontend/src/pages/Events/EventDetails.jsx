@@ -307,6 +307,12 @@ const EventDetails = () => {
                 {eventDetails.gender_restriction || "None"}
               </span>
             </p>
+            <p className="text-gray-700 mb-1">
+                Remaining Tickets:{" "}
+                <span className="font-semibold">
+                  {eventDetails.event_max_capacity - eventDetails.booked_tickets.length}
+                </span>
+              </p>
           </div>
 
           <div className="flex flex-col items-start gap-y-3">
@@ -343,12 +349,7 @@ const EventDetails = () => {
                   {moment(eventDetails.created_by.dateOfBirth).format("ll")}
                 </span>
               </p>
-              <p className="text-gray-700 mb-1">
-                Remaining Tickets:{" "}
-                <span className="font-semibold">
-                  {eventDetails.event_max_capacity - eventDetails.booked_tickets.length}
-                </span>
-              </p>
+              
             </div>
             <button
               onClick={() => handleBookTicket(eventDetails._id)}
