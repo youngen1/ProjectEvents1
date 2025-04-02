@@ -16,7 +16,7 @@ const VerifyPayment = () => {
             const userId = queryParams.get('userId');
 
             try {
-                const response = await axiosInstance.get(`/events/verify-payment-callback?reference=${reference}&eventId=${eventId}&userId=${userId}`);
+                const response = await axiosInstance.get(`/events/verify?reference=${reference}&eventId=${eventId}&userId=${userId}`);
                 if (response.data.message === 'Ticket booked successfully') {
                     toast.success('Payment successful! Ticket booked.');
                 } else {
