@@ -173,14 +173,17 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
-const functions = require("firebase-functions");
-const serviceAccount = require("./event-management-1a68f-firebase-adminsdk-7tfgz-f7e7727a7c.json");
 const cors = require("cors");
 const path = require("path");
 
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert({
+    projectId: "event-management-1a68f",
+    clientEmail: "firebase-adminsdk-7tfgz@event-management-1a68f.iam.gserviceaccount.com",
+    privateKey: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCpwQRN/wNniBGc\nFwGWhzRghPQMqTM17HtsRTErUbl9aBgWlMq3NbAOlbPsmkKjM7bASHbLXRYF1clq\nVVfu+vBP5AEfj3T/JVtSI0yjC5WNXBAT7gcLJziTU8a1Jfox+714/hgq8HeBj8N/\nzqPDRF8Op9m1LSLpxjjHe417pNEHkf0y1/vJU4koJ1jEytft7Mp6VBmOufJZ6gDW\n9SOnpTtc9LFODEpx1b9Te5qenVBCFEfYTlivvkWwRjGA5vUvd1g0+AdzRSYd2CQt\nEbdy0ffN/lkfdOVPTRFnEZ4fihlqWR753kQ5wtqP9ERl2Gy2qu+y9XnFVFXKI2YW\ntztkIAwdAgMBAAECggEABNWo9Dm3lJrE+Z+UHX/jR35x3uxwt2/xQe+ki1nMARzW\nVspNDbO7PGcaFTp9fF1sLoTB0V/o0Si6EEu28ej2sCfLumThDaU4ORolRB1/2GNP\nV+n3DGPFEjkYFy+qNQM47bm64XowxSFdjYXKlzKaynWQVz8eV+8bzd6gdG2IwIDl\nhiwmufeo4XPTE9osX081vctWRubvCMsar8iQL1jglrQotyII9Sf2CrdH+L2JPPOO\nsNtEH3CSFXHzMStvISZ2vs7ZNkTEcY9Jz0rmR4TUwq5EtnlOkgobCpJ/uiBr0FP4\nj6NjPr9Y2N/+tq37pcfOBbflBDwi8b00u1ND/yYv8QKBgQDXhXdRTVMeWg/ztsnH\nCLxr5W+zlNLynnqmlMlEJCrYs7TW+aYYs30S0RuwTzsF2qlXh4BoF+tCa3X1K8y/\nldMk4rKad2G1N/Ezwm6fjl8Gkc4AW4p4NvPYlHPwF+Melwz3Ff2PuMyBmYkl/xfn\nMS806gGiE6yK/FMosDmSIz6S2QKBgQDJov+S8i0mjhSUNjmLCMT4VPeXHQ3BBWlA\nfR0iHVuIx3VJLfYgTHNBOs3RwaISGoBz2/RHCocpq4m4GTeFAFuXVrdC/5gurQT+\ndr8htc0VX7VDv1F9/HtczTFa0/439l7Ba5mJn88+zdeYprU633aukzL4Y0AUD9VA\nAIQzT84w5QKBgQCTR9/8LW1pxn40PGuzmmK5ETe+byuhJXAHupG4AUdOg7BHYJ+D\nLdWBMGlNmTdqjr0+1ZiIih/5adpYSzBGlKqQAGOxb3fUEYDBsFNMskx5/tXaJLSB\n5nvJO9nm70wEMZFooRyARPdscXHqB2NcWJ47+NZY3j0BVeG2YodVOMSgMQKBgFwQ\nS0bpwkm/R5AgbgeYOm70RJO/lT8TXGowdfPUma2K/HcsQBuhLGKVGdJy6bAAX7QG\nsrMZEHurMddX1Cyq7CbeVhCGKRLutsAEseIPYxMmPtou6WNvu1e07Jr+/izJFZyU\np2baC8MuMwkk3MyDqWmuFfCpSGGglQqC8dmHz6otAoGAPLegqqHHyjAzr24Ih5rs\nAOldF6GdUhihyKZhQFpN5m4fqIafov56a4tLD6d2/woJdQodOmUD4Zjv0pDEopjB\nHqPYRFBG8VTnokTKykJ3/Xork1fdaL8FLIPxGxLnxHzVbCgjSsewybNcVqIiyorW\njObTxo6XIyYef4tCL8MJhgY=\n-----END PRIVATE KEY-----\n"
+  }),
+  storageBucket: "event-management-1a68f.appspot.com"
 });
 
 const app = express();
