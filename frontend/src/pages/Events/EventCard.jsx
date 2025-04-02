@@ -121,7 +121,7 @@ const EventCard = ({
 
             <div className="bg-white shadow rounded-lg overflow-hidden transition-transform transform hover:scale-105">
 
-              <div className="aspect-w-16 aspect-h-9">
+              <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden">
                     {/* Show Thumbnail Initially */}
                     {!showVideo && thumbnail && (
                         <img
