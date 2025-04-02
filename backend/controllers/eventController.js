@@ -1129,6 +1129,10 @@ exports.getUserEvents = async (req, res) => {
             return res.status(401).json({ message: "Authentication required." });
         }
 
+      const requestingUser = await User.findById(userId).select('-password');
+        console.log('\n=== REQUESTING USER ===');
+        console.log(JSON.stringify(requestingUser.toObject(), null, 2));
+
         const createdEvents = await Event.find({ created_by: userId })
             .sort({ event_date_and_time: -1 }) // Sort by date descending
             .populate("created_by", "fullname username profile_picture")
