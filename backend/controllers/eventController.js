@@ -1055,18 +1055,25 @@ exports.verifyPaymentCallback = async (req, res) => {
 
         console.log("Booking successful! User and event details updated.", { userId, eventId });
         await session.commitTransaction();
-        session.endSession();
+        return res.json({
+            success: true,
+            message: "Ticket booked successfully",
+            redirectUrl: `${FRONTEND_URL}/booking-success?eventId=${eventId}`
+        });
 
-        return res.redirect(`${FRONTEND_URL}/booking-success?eventId=${eventId}`);
+        
 
     } catch (error) {
         console.error("Critical error during payment verification!", error);
-        if (session.inTransaction()) {
-            console.log("Aborting transaction...");
-            await session.abortTransaction();
-        }
+        await session.abortTransaction();
+        // Ensure transaction is aborted on any error
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+            redirectUrl: `${FRONTEND_URL}/payment-failed?reason=${encodeURIComponent(error.message || 'server_error')}`
+        });
+    }finally {
         session.endSession();
-        return res.redirect(`${FRONTEND_URL}/payment-failed?reason=${encodeURIComponent(error.message || 'internal_error')}`);
     }
 };
 
