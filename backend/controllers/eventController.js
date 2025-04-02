@@ -582,7 +582,7 @@ exports.bookEvent = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const event = await Event.findById(eventId, 'ticket_price event_max_capacity age_restriction gender_restriction').lean(); // Fetch only needed fields
+        const event = await Event.findById(eventId, 'ticket_price event_max_capacity age_restriction gender_restriction booked_tickets').lean(); // Fetch only needed fields
         if (!event) {
             return res.status(404).json({ message: "Event not found" });
         }
