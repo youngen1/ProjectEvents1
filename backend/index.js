@@ -172,8 +172,16 @@ require('./models/PlatformEarning');
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const admin = require("firebase-admin");
+const functions = require("firebase-functions");
+const serviceAccount = require("./event-management-1a68f-firebase-adminsdk-7tfgz-f7e7727a7c.json");
 const cors = require("cors");
 const path = require("path");
+
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 const app = express();
 
