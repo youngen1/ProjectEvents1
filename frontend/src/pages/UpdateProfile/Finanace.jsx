@@ -33,6 +33,7 @@ export default function Finance() {
   const [profileUpdateLoading, setProfileUpdateLoading] = useState(false);
 
   console.log("user", user);
+  console.log("user earnings " , user.total_earnings );
 
   useEffect(() => {
     const fetchEvents = async () => {
