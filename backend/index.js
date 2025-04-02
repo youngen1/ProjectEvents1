@@ -188,29 +188,30 @@ admin.initializeApp({
 });
 
 const app = express();
+const allowedOrigins = [
+  'https://www.eventcircle.site',
+  'https://eventcircle.site',
+  'http://localhost:5173' // For development
+];
 
-// CORS configuration - update origins for production
-// const allowedOrigins = process.env.NODE_ENV === 'production'
-//   ? [process.env.FRONTEND_URL, 'https://project-events1-86ns.vercel.app' ,  'https://www.eventcircle.site' , 'https://eventcircle.site']
-//   : ['http://localhost:5173']; 
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.error('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
 
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-device-type'],
-//   credentials: true,
-//   optionsSuccessStatus: 200
-// };
-
-// app.use(cors(corsOptions));
-// app.options('*', cors(corsOptions)); 
-app.use(cors())
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({
   verify: (req, res, buf) => {
     req.rawBody = buf; 
