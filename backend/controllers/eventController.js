@@ -665,105 +665,156 @@ exports.getEvents = async (req, res) => {
 //         res.status(500).json({ message: "An error occurred while initiating the booking process." });
 //     }
 // };
-
 exports.bookEvent = async (req, res) => {
-    console.log("Received request to book event", { params: req.params, user: req.user?.id });
+    console.log('--- START OF bookEvent FUNCTION ---');
+    console.log('Request received at:', new Date().toISOString());
+    console.log('Request params:', req.params);
+    console.log('Request user:', req.user);
 
     const { eventId } = req.params;
     const userId = req.user?.id; // Use optional chaining
 
+    console.log('Extracted eventId:', eventId);
+    console.log('Extracted userId:', userId);
+
     if (!userId) {
-        console.warn("Unauthorized request - user not authenticated.");
+        console.log('No userId found - authentication required');
         return res.status(401).json({ message: "Authentication required." });
     }
 
     // Validate eventId format before querying DB
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
-        console.warn("Invalid Event ID format:", eventId);
+        console.log('Invalid Event ID format:', eventId);
         return res.status(400).json({ message: "Invalid Event ID format." });
     }
 
     const callbackUrl = `${FRONTEND_URL}/verify-payment?eventId=${eventId}&userId=${userId}`;
-    console.log("Generated callback URL:", callbackUrl);
+    console.log('Generated callback URL:', callbackUrl);
 
     try {
-        console.log("Fetching user details from database...");
+        console.log('Attempting to find user with ID:', userId);
         const user = await User.findById(userId, 'email dateOfBirth gender').lean();
         if (!user) {
-            console.warn("User not found:", userId);
+            console.log('User not found with ID:', userId);
             return res.status(404).json({ message: "User not found" });
         }
+        console.log('Found user:', { email: user.email, dateOfBirth: user.dateOfBirth, gender: user.gender });
 
-        console.log("Fetching event details from database...");
-        const event = await Event.findById(eventId, 'ticket_price event_max_capacity age_restriction gender_restriction').lean();
+        console.log('Attempting to find event with ID:', eventId);
+        const event = await Event.findById(eventId, 'ticket_price event_max_capacity age_restriction gender_restriction booked_tickets').lean();
         if (!event) {
-            console.warn("Event not found:", eventId);
+            console.log('Event not found with ID:', eventId);
             return res.status(404).json({ message: "Event not found" });
         }
+        console.log('Found event:', { 
+            ticket_price: event.ticket_price, 
+            capacity: event.event_max_capacity,
+            age_restriction: event.age_restriction,
+            gender_restriction: event.gender_restriction,
+            booked_tickets_count: event.booked_tickets ? event.booked_tickets.length : 0
+        });
 
         // --- Pre-payment Checks ---
-        console.log("Checking event capacity...");
+        console.log('Checking event capacity...');
         if (event.event_max_capacity <= 0) {
-            console.warn("Event is fully booked:", eventId);
+            console.log('Event is fully booked. Capacity:', event.event_max_capacity);
             return res.status(400).json({ message: "Event is fully booked" });
         }
 
+        console.log('Calculating user age...');
         const userAge = calculateAge(user.dateOfBirth);
-        console.log("User age calculated:", userAge);
+        console.log('User age calculated:', userAge);
 
-        // Age Restriction Check
+        console.log('Checking age restrictions...');
         let ageRestricted = false;
-        if (userAge !== null && event.age_restriction?.length > 0) {
-            console.log("Checking age restrictions...", event.age_restriction);
+        if (userAge !== null && event.age_restriction && event.age_restriction.length > 0) {
+            console.log('Age restrictions exist:', event.age_restriction);
             if (event.age_restriction.includes('<18') && userAge < 18) ageRestricted = true;
             else if (event.age_restriction.includes('18 - 29') && (userAge < 18 || userAge > 29)) ageRestricted = true;
             else if (event.age_restriction.includes('30 - 39') && (userAge < 30 || userAge > 39)) ageRestricted = true;
             else if (event.age_restriction.includes('40 <') && userAge < 40) ageRestricted = true;
         }
+        console.log('Age restriction check result:', ageRestricted);
+        
         if (ageRestricted) {
-            console.warn("User does not meet age restrictions:", { userAge, eventAgeRestrictions: event.age_restriction });
+            console.log('User does not meet age requirements. User age:', userAge, 'Restrictions:', event.age_restriction);
             return res.status(403).json({ message: "You do not meet the age requirements for this event." });
         }
 
-        // Gender Restriction Check
-        if (user.gender && event.gender_restriction?.includes(user.gender)) {
-            console.warn("User does not meet gender restrictions:", { userGender: user.gender, eventGenderRestrictions: event.gender_restriction });
-            return res.status(403).json({ message: "This event has gender restrictions you do not meet." });
+        console.log('Checking gender restrictions...');
+        console.log("Event gender restrictions:", event.gender_restriction);
+        console.log("User gender:", user.gender);
+        console.log("Is gender_restriction an array?", Array.isArray(event.gender_restriction));
+        
+        if (user.gender && Array.isArray(event.gender_restriction)) {
+            console.log('Gender restriction is an array. Checking if user gender is restricted...');
+            console.log('Does restriction include test string "abcd"?', event.gender_restriction.includes("abcd"));
+            console.log('Does restriction include user gender?', event.gender_restriction.includes(user.gender));
+            
+            if (event.gender_restriction.includes(user.gender)) {
+                console.log('User gender is restricted. User gender:', user.gender, 'Restrictions:', event.gender_restriction);
+                return res.status(403).json({ message: "This event has gender restrictions you do not meet." });
+            }
         }
 
-        console.log("User passed age and gender validation checks.");
+        console.log('Checking ticket price...');
+        if (event.ticket_price === 0) {
+            console.log('Free event detected. Checking if user is already booked...');
+            if (event.booked_tickets.includes(userId)) {
+                console.log('User already booked this free event. User ID:', userId);
+                return res.status(400).json({ message: "You have already booked this event." });
+            }
 
-        // --- Initiate Payment ---
-        const amountInKobo = Math.round(event.ticket_price * 100);
-        console.log("Ticket price converted to kobo:", amountInKobo);
+            console.log('Booking user for free event...');
+            await Event.findByIdAndUpdate(eventId, {
+                $push: { booked_tickets: userId },
+                $inc: { ticketsSold: 1 }
+            });
+            console.log('Successfully booked free event for user:', userId);
+            return res.status(200).json({ message: "You have successfully booked this free event." });
+        }
 
+        console.log('Paid event detected. Converting amount to kobo...');
+        const amountInKobo = event.ticket_price;
+        console.log('Amount in kobo:', amountInKobo);
+        
         if (amountInKobo <= 0) {
-            console.warn("Invalid ticket price:", event.ticket_price);
+            console.log('Invalid ticket price:', amountInKobo);
             return res.status(400).json({ message: "Ticket price must be greater than zero to initiate payment." });
         }
 
-        console.log("Initiating payment with Paystack...");
+        console.log('Initializing payment with Paystack...');
+        console.log('Payment details:', {
+            amount: amountInKobo,
+            email: user.email,
+            callbackUrl: callbackUrl
+        });
+        
         const paymentData = await initializePayment(amountInKobo, user.email, callbackUrl);
+        console.log('Paystack response:', paymentData);
 
-        // Check Paystack response structure
         if (!paymentData || !paymentData.status || !paymentData.data || !paymentData.data.authorization_url || !paymentData.data.reference) {
             console.error("Invalid response from Paystack initialization:", paymentData);
             return res.status(500).json({ message: "Failed to initiate payment with provider." });
         }
 
         const { authorization_url, reference } = paymentData.data;
-        console.log("Payment initiated successfully.", { reference, authorization_url });
+        console.log('Payment initialized successfully. Authorization URL:', authorization_url);
+        console.log('Payment reference:', reference);
 
         res.status(200).json({ authorization_url, reference });
 
     } catch (error) {
-        console.error("Error initiating event booking:", error);
+        console.error("Error in bookEvent function:", {
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
         res.status(500).json({ message: "An error occurred while initiating the booking process." });
+    } finally {
+        console.log('--- END OF bookEvent FUNCTION ---');
     }
 };
-
-
-
 // --- Verify Payment Callback (Handles Booking Logic Post-Payment) ---
 // exports.verifyPaymentCallback = async (req, res) => {
 //     const { reference, eventId, userId } = req.query;
