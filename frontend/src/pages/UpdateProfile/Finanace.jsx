@@ -32,7 +32,7 @@ export default function Finance() {
   const [profilePicture, setProfilePicture] = useState(null);
   const [profileUpdateLoading, setProfileUpdateLoading] = useState(false);
 
-  console.log("user", user);
+  console.log("user in finance.jsx ", user);
   console.log("user earnings " , user.total_earnings );
 
   useEffect(() => {
