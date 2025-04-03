@@ -39,6 +39,9 @@ export default function Finance() {
     const fetchEvents = async () => {
       try {
         const res = await axiosInstance.get(`/events/getUserEvents`);
+
+          const earnings = await axiosInstance.get('/events/admin/earnings');
+        console.log(" earnings from backend ", earnings?.data);
         console.log("my events", res?.data);
         setMyEvents(res?.data);
       } catch (error) {
