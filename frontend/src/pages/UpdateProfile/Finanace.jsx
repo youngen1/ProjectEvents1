@@ -31,6 +31,7 @@ export default function Finance() {
   const [profileModel, setProfileModel] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profileUpdateLoading, setProfileUpdateLoading] = useState(false);
+  conse [totalEarnings , setTotalEarnings] = useState(0);
 
   console.log("user in finance.jsx ", user);
   console.log("user earnings " , user.total_earnings );
@@ -42,6 +43,7 @@ export default function Finance() {
 
           const earnings = await axiosInstance.get('/events/admin/earnings');
         console.log(" earnings from backend ", earnings?.data);
+         setTotalEarnings( Number(earnings?.data.totalEarnings).toFixed(2));
         console.log("my events", res?.data);
         setMyEvents(res?.data);
       } catch (error) {
@@ -285,7 +287,7 @@ export default function Finance() {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-500">Available Balance</p>
-                    <p className="text-3xl font-bold text-gray-900">R{user?.total_earnings || 0}</p>
+                    <p className="text-3xl font-bold text-gray-900">R{totalEarnings || 0}</p>
                   </div>
                   {user?.total_earnings > 10 && (
                     <button
