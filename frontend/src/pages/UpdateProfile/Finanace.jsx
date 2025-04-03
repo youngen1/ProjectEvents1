@@ -20,7 +20,7 @@ export default function Finance() {
   const {
     user,
     addBankAccount,
-    totalEarnings,
+   
     requestWithdrawal,
     updateProfile,
   } = useAuth();
