@@ -213,7 +213,7 @@ const corsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With' , 'x-device-type' ],
   credentials: true,
   optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
