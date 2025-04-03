@@ -31,7 +31,7 @@ export default function Finance() {
   const [profileModel, setProfileModel] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profileUpdateLoading, setProfileUpdateLoading] = useState(false);
-  conse [totalEarnings , setTotalEarnings] = useState(0);
+  const [totalEarnings , setTotalEarnings] = useState(0);
 
   console.log("user in finance.jsx ", user);
   console.log("user earnings " , user.total_earnings );
