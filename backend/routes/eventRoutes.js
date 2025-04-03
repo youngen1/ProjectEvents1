@@ -63,7 +63,7 @@ router.delete('/:eventId', authMiddleware, eventController.deleteEvent);
 router.put('/update/:eventId', authMiddleware, eventController.updateEvent);
 
 // --- Admin Routes 
-router.get('/admin/earnings', authMiddleware, adminMiddleware, eventController.getPlatformEarnings);
+router.get('/admin/earnings', authMiddleware,  eventController.getPlatformEarnings);
 // router.delete('/admin/delete-all', authMiddleware, adminMiddleware, eventController.deleteAllEvents);
 
 
