@@ -115,7 +115,7 @@ function App() {
 
         {/* Admin Routes */}
         <Route
-          path="events/admin/earnings"
+          path="/admin/earnings"
           element={
             <AdminRoute>
               <PlatformEarnings />
