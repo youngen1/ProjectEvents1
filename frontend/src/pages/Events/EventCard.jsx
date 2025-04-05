@@ -20,7 +20,7 @@ const videoOptions = {
         "fullscreen",
     ],
     fullscreen: {
-        enabled: true,
+        enabled: false,
         fallback: true,
         iosNative: true,
     },
