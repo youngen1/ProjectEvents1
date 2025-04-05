@@ -76,18 +76,19 @@ const fileFilter = (req, file, cb) => {
   console.log(`File size: ${file.size} bytes`);
 
   if (file.fieldname === 'event_video') {
+        // Allowed video mimetypes/extensions
+        const allowedVideoTypes = /mp4|mov|avi|wmv|mkv|webm|quicktime/; // Added quicktime
+        const mimetype = file.mimetype.startsWith('video/');
+        const extname = allowedVideoTypes.test(path.extname(file.originalname).toLowerCase());
     console.log('Checking video file');
-    const allowedVideoTypes = /mp4|mov|avi|wmv|mkv|webm/;
-    const mimetype = file.mimetype.startsWith('video/');
-    const extname = allowedVideoTypes.test(path.extname(file.originalname).toLowerCase());
-
-    if (mimetype && extname) {
-      console.log('Video file accepted');
-      cb(null, true);
-    } else {
-      console.log('Invalid video file type');
-      cb(new Error('Invalid file type for video. Only video formats (mp4, mov, avi, etc.) are allowed.'), false);
-    }
+     if (mimetype) { // Primarily rely on mimetype if available
+             cb(null, true);
+        } else if(extname) { // Fallback to extension
+             cb(null, true);
+        }
+         else {
+            cb(new Error('Invalid file type for video.'), false);
+        }
   } else if (file.fieldname === 'thumbnail_file') {
     console.log('Checking thumbnail file');
     const allowedImageTypes = /jpeg|jpg|png|gif|webp/;
