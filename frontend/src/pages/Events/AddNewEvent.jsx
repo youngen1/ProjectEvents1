@@ -237,9 +237,28 @@ export default function AddNewEvent() {
             // Content-Type is set automatically by browser for FormData
           },
           onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || values.event_video.size)); // Use file size as fallback total
+            // --- More Robust Progress Calculation ---
+            let percentCompleted = 0;
+            const loaded = typeof progressEvent.loaded === 'number' ? progressEvent.loaded : -1;
+            const currentVideoFileSize = values.event_video?.size; // Get size safely
+            const totalSize = progressEvent.total > 0 ? progressEvent.total : (currentVideoFileSize || 0);
+    
+            // Log values for debugging if needed
+            // console.log('[onUploadProgress] Values:', { loaded, total: progressEvent.total, videoFileSize: currentVideoFileSize, calculatedTotal: totalSize });
+    
+            if (totalSize > 0 && loaded >= 0) {
+                percentCompleted = Math.round((loaded * 100) / totalSize);
+            } else {
+                console.warn("Upload progress total size unknown or invalid.", { loaded, total: totalSize });
+                // Handle indeterminate progress if desired (e.g., set to 1 if loaded > 0)
+            }
+    
+            percentCompleted = Math.min(Math.max(percentCompleted, 0), 100); // Clamp 0-100
+    
+            // console.log('[onUploadProgress] Calculated Percent:', percentCompleted);
             setVideoUploadProgress(percentCompleted);
-          },
+            // --- End of Robust Calculation ---
+        },
         });
 
         // --- 2. Your backend should process both, save them (e.g., to Firebase), ---
