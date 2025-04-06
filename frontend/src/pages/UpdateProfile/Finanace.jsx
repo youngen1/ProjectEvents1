@@ -287,7 +287,7 @@ export default function Finance() {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-500">Available Balance</p>
-                    <p className="text-3xl font-bold text-gray-900">R{user?.total_earnings || 0}</p>
+                    <p className="text-3xl font-bold text-gray-900">R{totalEarnings || 0}</p>
                   </div>
                   {user?.total_earnings > 10 && (
                     <button
