@@ -1,3 +1,9 @@
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { spawn } = require('child_process');
+const router = express.Router();
 const mongoose = require('mongoose');
 const Event = require('../models/Event'); // Adjust path if needed
 const User = require('../models/User');   // Adjust path if needed
@@ -7,8 +13,7 @@ const crypto = require('crypto');
 const admin = require('firebase-admin'); // Ensure firebase-admin is installed and initialized
 const { v4: uuidv4 } = require('uuid'); // Ensure uuid is installed (npm i uuid)
 const Joi = require('joi');
-const { initializePayment, verifyPayment } = require('../utils/paystack'); // Adjust path if needed
-
+const { initializePayment, verifyPayment } = require('../utils/paystack');
 // --- Environment Variables ---
 // Make sure FRONTEND_URL is set in your .env file or environment
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'; // Provide a default for safety
@@ -37,6 +42,69 @@ try {
     // You might want to throw the error or exit if Firebase is critical
     // throw initError;
 }
+const generateThumbnail = (videoPath, outputPath) => {
+    return new Promise((resolve, reject) => {
+        const ffmpeg = spawn('ffmpeg', [
+            '-i', videoPath,
+            '-ss', '00:00:01', // Capture thumbnail at 1 second
+            '-vframes', '1',    // Capture only one frame
+            '-vf', 'scale=480:-1', // Scale thumbnail to 480px width, keep aspect ratio
+            '-y', outputPath     // Overwrite if output file exists
+        ]);
+        ffmpeg.on('close', (code) => {
+            if (code === 0 && fs.existsSync(outputPath)) {
+                resolve(outputPath); // Resolve with the output path
+            } else {
+                reject(new Error('Failed to generate thumbnail'));
+            }
+        });
+
+        ffmpeg.on('error', (err) => {
+            reject(err);
+        });
+    });
+};
+
+// Helper function to convert iOS MOV files to MP4 if needed
+const convertVideoIfNeeded = (inputPath, outputDir) => {
+    return new Promise((resolve, reject) => {
+        const ext = path.extname(inputPath).toLowerCase();
+
+        if (ext !== '.mov') {
+            // No conversion needed
+            return resolve(inputPath); // Resolve with the original path
+        }
+
+        const filename = path.basename(inputPath);
+        const outputFilename = path.basename(filename, '.mov') + '.mp4';
+        const outputPath = path.join(outputDir, outputFilename);
+
+        const ffmpeg = spawn('ffmpeg', [
+            '-i', inputPath,
+            '-c:v', 'libx264', // Video codec
+            '-preset', 'fast', // Encoding preset
+            '-c:a', 'aac',    // Audio codec
+            '-b:a', '128k',   // Audio bitrate
+            '-movflags', 'faststart', // Optimize for streaming (important for web)
+            '-y', outputPath
+        ]);
+
+        ffmpeg.on('close', (code) => {
+            if (code === 0 && fs.existsSync(outputPath)) {
+                resolve(outputPath); // Resolve with the path to the converted MP4
+            } else {
+                // If conversion fails, resolve with the original path (better than rejecting, handle failure gracefully later if needed)
+                resolve(inputPath); // Resolve with the original path, indicating conversion might have failed
+            }
+        });
+
+        ffmpeg.on('error', (err) => {
+            // If ffmpeg itself errors out
+            reject(err);
+        });
+    });
+};
+
 
 
 // --- Helper Function (Synchronous) ---
@@ -109,8 +177,6 @@ const updateEventSchema = Joi.object({
     event_description: Joi.string(),
     event_duration: Joi.number().min(0.5),
     event_max_capacity: Joi.number().min(1).integer(),
-    // Note: Updating event_video/thumbnail via this route currently expects URLs.
-    // Handling file updates would require a separate mechanism or modification here.
     event_video: Joi.string().allow(''),
     thumbnail: Joi.string().allow(''),
     age_restriction: Joi.array().items(Joi.string()),
@@ -138,8 +204,7 @@ async function deleteFileFromFirebase(fileUrl) {
 }
 */
 
-// --- NEW Controller for Handling File Uploads and Event Creation ---
-// NOTE: Assumes 'multer().fields(...)' middleware is used in the ROUTER before this runs
+
 exports.createEventWithUpload = async (req, res) => {
     // --- 1. Check if Firebase SDK/Bucket is ready ---
     
@@ -177,6 +242,132 @@ exports.createEventWithUpload = async (req, res) => {
     if (!created_by) {
          return res.status(401).json({ message: 'Authentication required: User ID not found.' });
     }
+    const tempUploadDir = path.join(__dirname, '../temp-uploads'); // Create this directory if it doesn't exist
+    if (!fs.existsSync(tempUploadDir)) {
+        fs.mkdirSync(tempUploadDir);
+    }
+    const tempVideoPath = path.join(tempUploadDir, `video-${Date.now()}-${videoFile.originalname}`);
+    const tempThumbnailPath = path.join(tempUploadDir, `thumbnail-${Date.now()}-thumbnail.jpg`); // Output path for thumbnail
+
+    let processedVideoPath = tempVideoPath; // Assume original path initially
+
+    try {
+        // --- Save video file temporarily to disk for processing ---
+        fs.writeFileSync(tempVideoPath, videoFile.buffer);
+
+        // --- 4. Convert Video if needed (iOS MOV) ---
+        processedVideoPath = await convertVideoIfNeeded(tempVideoPath, tempUploadDir);
+        const isConverted = processedVideoPath !== tempVideoPath; // Check if path changed, indicating conversion
+
+        const videoUploadPathForFirebase = processedVideoPath; // Path to use for Firebase upload (either original or converted)
+
+        // --- 5. Generate Thumbnail (Server-Side) ---
+        await generateThumbnail(videoUploadPathForFirebase, tempThumbnailPath);
+
+        // --- 6. Upload Video to Firebase ---
+        const videoFileName = `videos/event-${uuidv4()}-${path.basename(videoUploadPathForFirebase)}`; // Use processed video path basename
+        const videoBlob = bucket.file(videoFileName);
+        const videoBlobStream = videoBlob.createWriteStream({
+            metadata: { contentType: isConverted ? 'video/mp4' : videoFile.mimetype }, // Set correct mimetype after conversion
+            public: true,
+            resumable: false,
+        });
+
+        const videoUploadPromise = new Promise((resolve, reject) => {
+            videoBlobStream.on('error', err => reject(new Error(`Video upload stream error: ${err.message}`)));
+            videoBlobStream.on('finish', () => {
+                videoURL = `https://storage.googleapis.com/${bucket.name}/${videoFileName}`;
+                resolve();
+            });
+            fs.createReadStream(videoUploadPathForFirebase).pipe(videoBlobStream); // Pipe from file path
+        });
+        await videoUploadPromise;
+
+        // --- 7. Upload Thumbnail to Firebase ---
+        const thumbFileName = `thumbnails/event-${uuidv4()}-thumbnail.jpg`; // Fixed jpg extension for server-generated thumbnails
+        const thumbBlob = bucket.file(thumbFileName);
+        const thumbBlobStream = thumbBlob.createWriteStream({
+            metadata: { contentType: 'image/jpeg' }, // Fixed jpeg mimetype for thumbnails
+            public: true,
+            resumable: false,
+        });
+
+        const thumbUploadPromise = new Promise((resolve, reject) => {
+            thumbBlobStream.on('error', err => reject(new Error(`Thumbnail upload stream error: ${err.message}`)));
+            thumbBlobStream.on('finish', () => {
+                thumbnailURL = `https://storage.googleapis.com/${bucket.name}/${thumbFileName}`;
+                resolve();
+            });
+            fs.createReadStream(tempThumbnailPath).pipe(thumbBlobStream); // Pipe from thumbnail file path
+        });
+        await thumbUploadPromise;
+
+
+        // --- 8. Parse JSON string fields from validatedBody ---
+        let parsedAddress, parsedAgeRestriction, parsedGenderRestriction;
+        try {
+            parsedAddress = JSON.parse(validatedBody.event_address);
+            parsedAgeRestriction = validatedBody.age_restriction ? JSON.parse(validatedBody.age_restriction) : [];
+            parsedGenderRestriction = validatedBody.gender_restriction ? JSON.parse(validatedBody.gender_restriction) : [];
+            if (!parsedAddress || typeof parsedAddress.address !== 'string' || typeof parsedAddress.longitude !== 'number' || typeof parsedAddress.latitude !== 'number') {
+                throw new Error('Invalid event_address structure');
+            }
+        } catch (parseError) {
+            console.error("Error parsing JSON fields from body:", parseError);
+            return res.status(400).json({ message: 'Invalid format for address, age, or gender restriction string.' });
+        }
+
+        // --- 9. Create Event Document in MongoDB ---
+        const newEvent = new Event({
+            ...validatedBody,
+            event_address: {
+                address: parsedAddress.address,
+                longitude: parsedAddress.longitude,
+                latitude: parsedAddress.latitude,
+            },
+            age_restriction: parsedAgeRestriction,
+            gender_restriction: parsedGenderRestriction,
+            created_by: created_by,
+            event_video: videoURL,
+            thumbnail: thumbnailURL,
+        });
+
+        const savedEvent = await newEvent.save();
+
+        // --- 10. Send Success Response ---
+        res.status(201).json({
+            message: 'Event created successfully!',
+            event: savedEvent,
+            videoURL: videoURL,
+            thumbnailURL: thumbnailURL,
+        });
+
+    } catch (error) {
+        // --- Robust Error Handling ---
+        console.error(`Error in createEventWithUpload:`, error);
+
+        // Optional: Attempt to delete uploaded files from Firebase if DB save fails or other error occurs
+        // if (videoURL) await deleteFileFromFirebase(videoURL).catch(e => console.error("Firebase cleanup failed for video", e.message));
+        // if (thumbnailURL) await deleteFileFromFirebase(thumbnailURL).catch(e => console.error("Firebase cleanup failed for thumbnail", e.message));
+
+        // Provide more specific feedback
+        if (error.message.includes("upload stream error")) {
+            res.status(500).json({ message: 'Server error during file upload.', details: error.message });
+        } else if (error.name === 'ValidationError') {
+            res.status(400).json({ message: 'Database validation failed.', details: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal server error creating event.', details: error.message });
+        }
+    } finally {
+        // --- Cleanup temporary files ---
+        if (fs.existsSync(tempVideoPath)) {
+            fs.unlinkSync(tempVideoPath);
+        }
+        if (fs.existsSync(tempThumbnailPath)) {
+            fs.unlinkSync(tempThumbnailPath);
+        }
+    }
+};
 
     try {
         // --- 4. Upload Video to Firebase ---
@@ -299,116 +490,8 @@ exports.createEventWithUpload = async (req, res) => {
              res.status(500).json({ message: 'Internal server error creating event.', details: error.message });
         }
     }
-};
+;
 
-
-// --- Old Create Event (Commented Out - Not compatible with file uploads) ---
-/*
-exports.createEvent = async (req, res) => {
-    // THIS FUNCTION EXPECTS URLS IN req.body, NOT FILES
-    try {
-        // Use the original Joi schema that expects URLs
-        const { value, error } = originalCreateEventSchema.validate(req.body, { abortEarly: false });
-        if (error) {
-            const errorMessages = error.details.map(detail => detail.message);
-            return res.status(400).json({ message: "Validation Error", errors: errorMessages });
-        }
-
-        const created_by = req.user.id; // Assumes auth middleware sets req.user
-
-        // Basic check for address structure if needed (Joi already does this)
-        if (!value.event_address || typeof value.event_address.address !== 'string') {
-             return res.status(400).json({ message: "Invalid address structure."});
-        }
-
-        const newEvent = new Event({
-            ...value, // Spread validated data (including string URLs)
-            created_by,
-        });
-
-        await newEvent.save();
-        res.status(201).json({ message: "Event created successfully (using old method)", event: newEvent });
-    } catch (error) {
-        console.error("Error creating event (old method):", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-*/
-
-
-// --- Get All Events (with Pagination & Filtering) ---
-// exports.getEvents = async (req, res) => {
-//     try {
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = parseInt(req.query.limit) || 10;
-//         const skip = (page - 1) * limit;
-
-//         const filter = {};
-//         const searchTerm = req.query.searchTerm?.trim(); // Trim whitespace
-//         const searchType = req.query.searchType;
-
-//         // Build filter based on search term and type
-//         if (searchTerm) {
-//             const regex = { $regex: searchTerm, $options: 'i' }; // Case-insensitive regex
-
-//             if (searchType === "location" && filter["event_address.address"] === undefined) { // Check if already set
-//                 filter["event_address.address"] = regex;
-//             } else if (searchType === "event" && filter.event_title === undefined) {
-//                 filter.event_title = regex;
-//             }
-//             // Username search needs special handling after population
-//         }
-
-//         if (req.query.category && filter.category === undefined) {
-//             filter.category = req.query.category;
-//         }
-
-//         // Date filtering
-//         if (req.query.dateFilter && filter.event_date_and_time === undefined) {
-//             const today = DateTime.now().startOf('day'); // Use Luxon for consistency
-//             if (req.query.dateFilter === 'today') {
-//                 const tomorrow = today.plus({ days: 1 });
-//                 filter.event_date_and_time = { $gte: today.toJSDate(), $lt: tomorrow.toJSDate() };
-//             } else if (req.query.dateFilter === 'upcoming') {
-//                 filter.event_date_and_time = { $gte: today.toJSDate() };
-//             }
-//         }
-
-//         // Count total documents matching the filter *before* pagination
-//         // Note: Count doesn't perfectly reflect post-population username filter results
-//         const totalMatchingFilter = await Event.countDocuments(filter);
-
-//         // Base query with population
-//         let query = Event.find(filter)
-//             .populate("created_by", "fullname email profile_picture username") // Select needed fields
-//             .populate("booked_tickets", "fullname email profile_picture")     // Select needed fields
-//             .sort({ event_date_and_time: 1 }) // Sort before skip/limit
-//             .skip(skip)
-//             .limit(limit);
-
-//         let events = await query.exec();
-
-//         // Apply username filter *after* population if needed
-//         if (searchTerm && searchType === 'username') {
-//             events = events.filter(event =>
-//                 event.created_by?.username?.toLowerCase().includes(searchTerm.toLowerCase())
-//             );
-//             // Note: 'total' count won't reflect this post-filtering accurately.
-//             // A more complex aggregation pipeline would be needed for perfect count + filter + pagination.
-//         }
-
-//         res.json({
-//             events: events,
-//             total: totalMatchingFilter, // Total matching the initial filter
-//             page: page,
-//             limit: limit,
-//             //totalPages: Math.ceil(totalMatchingFilter / limit) // Can calculate on frontend too
-//         });
-//     } catch (error) {
-//         console.error("Error fetching events:", error);
-//         res.status(500).json({ message: "Error fetching events", error: error.message });
-//     }
-// };
 
 exports.getEvents = async (req, res) => {
     try {
@@ -1271,7 +1354,7 @@ exports.getPlatformEarnings = async (req, res) => {
                     transaction_date: 1,
                     eventTitle: "$eventDetails.event_title", // Get specific fields
                     eventId: "$eventDetails._id",
-                    // eventTicketPrice: "$eventDetails.ticket_price" // Optional
+                    eventTicketPrice: "$eventDetails.ticket_price" // Optional
                 },
             },
              { // Group to calculate total and format output
