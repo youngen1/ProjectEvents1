@@ -6,7 +6,7 @@ const eventController = require('../controllers/eventController');
 const authMiddleware = require('../middleware/auth'); // Assuming correct path
 // const adminMiddleware = require('../middlewares/admin'); // Not used in provided routes, keep if needed elsewhere
 
-
+//test
 
 // --- Import the configured multer instance ---
 const upload = require('../middleware/multerConfig'); // Adjust path as needed
