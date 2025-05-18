@@ -166,9 +166,7 @@ exports.createEventWithUpload = async (req, res) => {
     }
     const videoFile = req.files.event_video[0];
     console.log(" video file: ", videoFile);
-    const thumbnailFile = (req.files.thumbnail_file && req.files.thumbnail_file.length > 0)
-        ? req.files.thumbnail_file[0]
-        : null; // Thumbnail is optional
+    const thumbnailFile = req.files.thumbnail
 
     let videoURL = null;
     let thumbnailURL = null;
