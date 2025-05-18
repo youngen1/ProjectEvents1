@@ -1,4 +1,4 @@
-import Paystack from 'paystack-node';
+const Paystack = require('paystack-node');
 
 /**
  * @typedef {Object} PaymentInitializeParams
@@ -191,4 +191,49 @@ class PaystackService {
 }
 
 // Export singleton instance
-export const paystackService = new PaystackService();
+const paystackService = new PaystackService();
+
+/**
+ * Initialize a payment transaction with Paystack
+ * @param {number} amount - Amount in kobo (smallest currency unit)
+ * @param {string} email - Customer's email address
+ * @param {string} callbackUrl - URL to redirect to after payment
+ * @returns {Promise<Object>} - Payment initialization data
+ */
+const initializePayment = async (amount, email, callbackUrl) => {
+    try {
+        console.log('Calling initializePayment wrapper function with:', { amount, email, callbackUrl });
+        return await paystackService.initializeTransaction({
+            amount: amount, // amount is already in kobo
+            email: email,
+            callback_url: callbackUrl
+        });
+    } catch (error) {
+        console.error('Error in initializePayment wrapper:', error);
+        throw error;
+    }
+};
+
+/**
+ * Verify a payment transaction with Paystack
+ * @param {string} reference - Payment reference to verify
+ * @returns {Promise<Object>} - Payment verification data
+ */
+const verifyPayment = async (reference) => {
+    try {
+        console.log('Calling verifyPayment wrapper function with reference:', reference);
+        return await paystackService.verifyPayment({
+            reference: reference
+        });
+    } catch (error) {
+        console.error('Error in verifyPayment wrapper:', error);
+        throw error;
+    }
+};
+
+// Export the functions and service using CommonJS syntax
+module.exports = {
+    paystackService,
+    initializePayment,
+    verifyPayment
+};

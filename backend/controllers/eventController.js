@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const admin = require('firebase-admin'); // Ensure firebase-admin is installed and initialized
 const { v4: uuidv4 } = require('uuid'); // Ensure uuid is installed (npm i uuid)
 const Joi = require('joi');
-const { paystackService } = require('../utils/paystack'); // Adjust path if needed
+const { initializePayment, verifyPayment } = require('../utils/paystack'); // Import the payment functions
 
 // --- Environment Variables ---
 // Make sure FRONTEND_URL is set in your .env file or environment
@@ -765,13 +765,59 @@ exports.bookEvent = async (req, res) => {
                 return res.status(400).json({ message: "You have already booked this event." });
             }
 
-            console.log('Booking user for free event...');
-            await Event.findByIdAndUpdate(eventId, {
-                $push: { booked_tickets: userId },
-                $inc: { ticketsSold: 1 }
-            });
-            console.log('Successfully booked free event for user:', userId);
-            return res.status(200).json({ message: "You have successfully booked this free event." });
+            // Start a session for transaction
+            const session = await mongoose.startSession();
+            session.startTransaction();
+
+            try {
+                console.log('Booking user for free event...');
+                await Event.findByIdAndUpdate(eventId, {
+                    $push: { booked_tickets: userId },
+                    $inc: { ticketsSold: 1 }
+                }, { session });
+
+                // Update User's my_tickets
+                await User.updateOne(
+                    { _id: userId },
+                    { $addToSet: { my_tickets: eventId } }
+                ).session(session);
+
+                // Get event creator
+                const eventCreator = await User.findById(event.created_by).select('total_earnings').session(session);
+                if (!eventCreator) {
+                    throw new Error("Event creator not found.");
+                }
+
+                // For free events, platform commission is 0
+                const platformCommission = 0;
+                // For free events, earnings are also 0
+                const earnings = 0;
+
+                // Update event creator's total earnings
+                eventCreator.total_earnings = (eventCreator.total_earnings || 0) + earnings;
+                await eventCreator.save({ session });
+
+                // Create and save platform earning record
+                const platformEarning = new PlatformEarning({
+                    event: eventId,
+                    amount: platformCommission,
+                    transaction_date: new Date(),
+                });
+                await platformEarning.save({ session });
+
+                // Commit the transaction
+                await session.commitTransaction();
+                session.endSession();
+
+                console.log('Successfully booked free event for user:', userId);
+                return res.status(200).json({ message: "You have successfully booked this free event." });
+            } catch (error) {
+                // Abort transaction on error
+                await session.abortTransaction();
+                session.endSession();
+                console.error("Error booking free event:", error);
+                throw error; // Re-throw to be caught by the outer catch block
+            }
         }
 
         console.log('Paid event detected. Converting amount to kobo...');
@@ -797,6 +843,7 @@ exports.bookEvent = async (req, res) => {
             console.error("Invalid response from Paystack initialization:", paymentData);
             return res.status(500).json({ message: "Failed to initiate payment with provider." });
         }
+
 
         const { authorization_url, reference } = paymentData.data;
         console.log('Payment initialized successfully. Authorization URL:', authorization_url);
