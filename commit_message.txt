@@ -1,0 +1,7 @@
+feat(email): update email configuration to use Gmail
+
+Update the email configuration in .env file to use Gmail's SMTP server:
+- Set EMAIL_HOST to smtp.gmail.com
+- Set EMAIL_PORT to 587 (for TLS)
+
+These changes enable the application to send emails through Gmail's SMTP server.
