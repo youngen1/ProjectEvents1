@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const admin = require('firebase-admin'); // Ensure firebase-admin is installed and initialized
 const { v4: uuidv4 } = require('uuid'); // Ensure uuid is installed (npm i uuid)
 const Joi = require('joi');
-const { initializePayment, verifyPayment } = require('../utils/paystack'); // Adjust path if needed
+const { paystackService } = require('../utils/paystack'); // Adjust path if needed
 
 // --- Environment Variables ---
 // Make sure FRONTEND_URL is set in your .env file or environment
@@ -142,7 +142,7 @@ async function deleteFileFromFirebase(fileUrl) {
 // NOTE: Assumes 'multer().fields(...)' middleware is used in the ROUTER before this runs
 exports.createEventWithUpload = async (req, res) => {
     // --- 1. Check if Firebase SDK/Bucket is ready ---
-    
+
     if (!bucket) {
         console.error("Firebase Storage Bucket is not initialized.");
         return res.status(500).json({ message: "Server configuration error: Storage service unavailable." });
@@ -160,7 +160,7 @@ exports.createEventWithUpload = async (req, res) => {
 
     // --- 3. Check for files provided by multer ---
 
-    
+
     if (!req.files || !req.files.event_video || req.files.event_video.length === 0) {
         return res.status(400).json({ message: 'Event video file is required.' });
     }
@@ -421,7 +421,7 @@ exports.getEvents = async (req, res) => {
 
         // Base match stage
         const matchStage = {};
-        
+
         // Handle category filter
         if (req.query.category) {
             matchStage.category = req.query.category;
@@ -431,7 +431,7 @@ exports.getEvents = async (req, res) => {
         if (req.query.dateFilter) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (req.query.dateFilter === 'today') {
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -448,7 +448,7 @@ exports.getEvents = async (req, res) => {
         if (req.query.searchTerm?.trim()) {
             const searchTerm = req.query.searchTerm.trim();
             const searchType = req.query.searchType || 'event';
-            
+
             if (searchType === 'location') {
                 matchStage['event_address.address'] = { 
                     $regex: searchTerm, 
@@ -620,7 +620,7 @@ exports.getEvents = async (req, res) => {
 //     return res.status(403).json({ message: "This event has gender restrictions you do not meet." });
 // }
 
-    
+
 //         // --- Initiate Payment ---
 //       if (event.ticket_price === 0) {
 //             // Check if user is already booked
@@ -735,7 +735,7 @@ exports.bookEvent = async (req, res) => {
             else if (event.age_restriction.includes('40 <') && userAge < 40) ageRestricted = true;
         }
         console.log('Age restriction check result:', ageRestricted);
-        
+
         if (ageRestricted) {
             console.log('User does not meet age requirements. User age:', userAge, 'Restrictions:', event.age_restriction);
             return res.status(403).json({ message: "You do not meet the age requirements for this event." });
@@ -745,12 +745,12 @@ exports.bookEvent = async (req, res) => {
         console.log("Event gender restrictions:", event.gender_restriction);
         console.log("User gender:", user.gender);
         console.log("Is gender_restriction an array?", Array.isArray(event.gender_restriction));
-        
+
         if (user.gender && Array.isArray(event.gender_restriction)) {
             console.log('Gender restriction is an array. Checking if user gender is restricted...');
             console.log('Does restriction include test string "abcd"?', event.gender_restriction.includes("abcd"));
             console.log('Does restriction include user gender?', event.gender_restriction.includes(user.gender));
-            
+
             if (event.gender_restriction.includes(user.gender)) {
                 console.log('User gender is restricted. User gender:', user.gender, 'Restrictions:', event.gender_restriction);
                 return res.status(403).json({ message: "This event has gender restrictions you do not meet." });
@@ -777,7 +777,7 @@ exports.bookEvent = async (req, res) => {
         console.log('Paid event detected. Converting amount to kobo...');
         const amountInKobo = event.ticket_price;
         console.log('Amount in kobo:', amountInKobo);
-        
+
         if (amountInKobo <= 0) {
             console.log('Invalid ticket price:', amountInKobo);
             return res.status(400).json({ message: "Ticket price must be greater than zero to initiate payment." });
@@ -789,7 +789,7 @@ exports.bookEvent = async (req, res) => {
             email: user.email,
             callbackUrl: callbackUrl
         });
-        
+
         const paymentData = await initializePayment(amountInKobo, user.email, callbackUrl);
         console.log('Paystack response:', paymentData);
 
@@ -1061,7 +1061,7 @@ exports.verifyPaymentCallback = async (req, res) => {
             redirectUrl: `${FRONTEND_URL}/booking-success?eventId=${eventId}`
         });
 
-        
+
 
     } catch (error) {
         console.error("Critical error during payment verification!", error);

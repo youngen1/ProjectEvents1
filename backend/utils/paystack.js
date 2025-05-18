@@ -1,112 +1,194 @@
-const axios = require("axios");
-const functions = require("firebase-functions"); // For Firebase Functions
-require("dotenv").config();
+import Paystack from 'paystack-node';
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+/**
+ * @typedef {Object} PaymentInitializeParams
+ * @property {string} email
+ * @property {number} amount - in kobo (smallest currency unit)
+ * @property {string} [reference]
+ * @property {string} [callback_url]
+ * @property {any} [metadata]
+ */
 
-if (!PAYSTACK_SECRET_KEY) {
-    throw new Error("Paystack secret key is not defined in environment variables");
+/**
+ * @typedef {Object} VerifyPaymentParams
+ * @property {string} reference
+ * @property {string|number} [amount] - Optional amount for mock payments
+ */
+
+class PaystackService {
+    constructor() {
+        this.paystack = null;
+        this.initialize();
+    }
+
+    /**
+     * Initialize the Paystack API client with the appropriate key
+     */
+    initialize() {
+        // For R2 test event, always use live mode
+        process.env.PAYSTACK_MODE = 'live';
+
+        // Always use the live key for the R2 event
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
+        if (!secretKey) {
+            throw new Error('PAYSTACK_SECRET_KEY is required for live payments but is missing');
+        }
+
+        // Fix: Paystack-Node doesn't actually support environment parameter in constructor
+        this.paystack = new Paystack(secretKey);
+
+        // Log that we're using live mode
+        console.log(`Paystack initialized in LIVE mode with correct environment settings.`);
+
+        // Debug to check the Paystack client was created properly
+        console.log(`Paystack client initialized: ${!!this.paystack}`);
+    }
+
+    /**
+     * Reinitialize the Paystack API client with updated keys
+     */
+    reinitialize() {
+        this.initialize();
+        console.log('Paystack service reinitialized with updated settings');
+    }
+
+    /**
+     * Initialize a transaction and get a payment URL
+     * @param {PaymentInitializeParams} params - Payment initialization parameters
+     * @returns {Promise<Object>} Transaction data
+     */
+    async initializeTransaction(params) {
+        try {
+            console.log('Initializing Paystack transaction in ZAR:', {
+                email: params.email,
+                amount: params.amount,
+                reference: params.reference
+            });
+
+            // Convert ZAR amount to smallest currency unit (cents)
+            // Make sure it's always in South African Rands
+            const amountInCents = Math.round(params.amount * 100);
+
+            console.log(`Processing payment: R${params.amount} → ${amountInCents} cents (ZAR)`);
+
+            // Convert metadata to JSON string if it exists (Paystack requires metadata as string)
+            const metadataString = params.metadata ? JSON.stringify(params.metadata) : undefined;
+
+            // Using live Paystack API for all transactions with explicit ZAR currency
+            const response = await this.paystack.initializeTransaction({
+                email: params.email,
+                amount: amountInCents,
+                currency: "ZAR", // Explicitly specify South African Rand
+                reference: params.reference,
+                callback_url: params.callback_url,
+                metadata: metadataString
+            });
+
+            if (!response.body.status) {
+                throw new Error(response.body.message || 'Failed to initialize transaction');
+            }
+
+            console.log('Paystack transaction initialization successful:', {
+                reference: response.body.data.reference,
+                authUrl: response.body.data.authorization_url
+            });
+
+            return response.body.data;
+        } catch (error) {
+            console.error('Paystack initialize transaction error:', error);
+            throw new Error(error.message || 'Could not initialize payment');
+        }
+    }
+
+    /**
+     * Verify a payment using the transaction reference
+     * @param {VerifyPaymentParams} params - Payment verification parameters
+     * @returns {Promise<Object>} Verification data
+     */
+    async verifyPayment(params) {
+        try {
+            console.log('Verifying Paystack payment with reference:', params.reference);
+
+            // Always using real Paystack API for verification
+            const response = await this.paystack.verifyTransaction({
+                reference: params.reference
+            });
+
+            if (!response.body.status) {
+                throw new Error(response.body.message || 'Failed to verify transaction');
+            }
+
+            // Verify currency is ZAR
+            if (response.body.data.currency !== 'ZAR') {
+                console.warn(`Warning: Payment currency is ${response.body.data.currency}, expected ZAR`);
+            }
+
+            // Convert amount from cents back to Rands for better readability in logs
+            const amountInRands = response.body.data.amount / 100;
+
+            console.log('Paystack payment verification successful:', {
+                reference: response.body.data.reference,
+                status: response.body.data.status,
+                amount: `R${amountInRands.toFixed(2)}`,
+                amountInCents: response.body.data.amount,
+                currency: response.body.data.currency || 'ZAR'
+            });
+
+            return response.body.data;
+        } catch (error) {
+            console.error('Paystack verify payment error:', error);
+            throw new Error(error.message || 'Could not verify payment');
+        }
+    }
+
+    /**
+     * Get a list of available payment channels (banks)
+     * @returns {Promise<Array<Object>>} List of payment channels
+     */
+    async getPaymentChannels() {
+        try {
+            try {
+                const response = await this.paystack.listPaymentChannels();
+
+                if (response && response.body && response.body.status && response.body.data) {
+                    return response.body.data;
+                }
+            } catch (apiError) {
+                console.error('Error fetching banks from Paystack API:', apiError);
+            }
+
+            // Fallback - return static list of major banks in South Africa
+            console.log('Using fallback bank list for Paystack');
+            return [
+                { id: 1, name: "ABSA Bank", slug: "absa-bank" },
+                { id: 2, name: "Capitec Bank", slug: "capitec-bank" },
+                { id: 3, name: "First National Bank", slug: "fnb" },
+                { id: 4, name: "Nedbank", slug: "nedbank" },
+                { id: 5, name: "Standard Bank", slug: "standard-bank" },
+                { id: 6, name: "African Bank", slug: "african-bank" },
+                { id: 7, name: "Bidvest Bank", slug: "bidvest-bank" },
+                { id: 8, name: "Discovery Bank", slug: "discovery-bank" },
+                { id: 9, name: "Investec", slug: "investec" },
+                { id: 10, name: "TymeBank", slug: "tyme-bank" },
+                { id: 11, name: "Bank Zero", slug: "bank-zero" },
+                { id: 12, name: "Grobank", slug: "grobank" },
+                { id: 13, name: "VBS Mutual Bank", slug: "vbs-mutual-bank" },
+                { id: 14, name: "Ubank", slug: "ubank" },
+                { id: 15, name: "Sasfin Bank", slug: "sasfin-bank" }
+            ];
+        } catch (error) {
+            console.error('Error in getPaymentChannels:', error);
+            // If everything fails, return a minimal list
+            return [
+                { id: 1, name: "ABSA Bank", slug: "absa-bank" },
+                { id: 2, name: "Capitec Bank", slug: "capitec-bank" },
+                { id: 3, name: "First National Bank", slug: "fnb" },
+                { id: 4, name: "Nedbank", slug: "nedbank" },
+                { id: 5, name: "Standard Bank", slug: "standard-bank" }
+            ];
+        }
+    }
 }
 
-const paystack = axios.create({
-    baseURL: "https://api.paystack.co",
-    headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        "Content-Type": "application/json",
-    },
-});
-
-const initializePayment = async (amount, email, callbackUrl) => {
-    try {
-        const response = await paystack.post("/transaction/initialize", {
-            amount: Math.round(amount * 100), // Convert to kobo (NGN)
-            email: email,
-            callback_url: callbackUrl,
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error initializing payment:", error.response ? error.response.data : error.message);
-        throw error; // Re-throw the original error
-    }
-};
-
-const verifyPayment = async (reference) => {
-    try {
-        const response = await paystack.get(`/transaction/verify/${reference}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error verifying payment:", error.response ? error.response.data : error.message);
-        throw error; // Re-throw the original error
-    }
-};
-
-const fetchBanks = async () => {
-    try {
-        const response = await paystack.get("/bank");
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching banks:", error.response ? error.response.data : error.message);
-        throw error; // Re-throw the original error
-    }
-};
-
-const createTransferRecipient = async (authorizationCode, name) => {
-    try {
-        const response = await paystack.post("/transferrecipient", {
-            type: "authorization",
-            name,
-            authorization_code: authorizationCode,
-            currency: "NGN", // Use NGN (Nigerian Naira)
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error creating transfer recipient:", error.response ? error.response.data : error.message);
-        throw error; // Re-throw the original error
-    }
-};
-
-const initiateTransfer = async (amount, recipientCode) => {
-    try {
-        const response = await paystack.post("/transfer", {
-            source: "balance",
-            amount, // Keep amount handling consistent (kobo or original)
-            recipient: recipientCode,
-            reason: "Withdrawal",
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error initiating transfer:", error.response ? error.response.data : error.message);
-        throw error; // Re-throw the original error
-    }
-};
-
-const chargeCard = async (email, amount, cardDetails) => {
-    try {
-      const response = await paystack.post("/charge", {
-        email,
-        amount, // Amount in kobo
-        card: {
-          number: cardDetails.card_number,
-          cvv: cardDetails.card_cvv,
-          expiry_month: cardDetails.card_expiry_month,
-          expiry_year: cardDetails.card_expiry_year,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error(
-        "Error charging card:",
-        error.response ? error.response.data : error.message
-      );
-      throw error;
-    }
-  };
-
-module.exports = {
-    initializePayment,
-    verifyPayment,
-    createTransferRecipient,
-    initiateTransfer,
-    fetchBanks,
-    chargeCard, // Be EXTREMELY careful with this function
-};
+// Export singleton instance
+export const paystackService = new PaystackService();
