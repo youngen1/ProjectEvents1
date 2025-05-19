@@ -12,7 +12,11 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "build": "cd frontend && npm run build"
   },
-  "keywords": ["event", "management", "platform"],
+  "keywords": [
+    "event",
+    "management",
+    "platform"
+  ],
   "author": "",
   "license": "ISC",
   "repository": {
