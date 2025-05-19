@@ -20,11 +20,11 @@ const videoOptions = {
         "fullscreen",
     ],
     fullscreen: {
-        enabled: false,
+        enabled: true,
         fallback: true,
         iosNative: true,
     },
-    clickToPlay: true,
+    clickToPlay: false,
     ratio: "16:9",
     previewThumbnails: { enabled: false }, 
 };
