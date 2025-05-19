@@ -218,7 +218,7 @@ const EventCard = ({
                                                 <img
                                                     alt={user.fullname}
                                                     src={user.profile_picture}
-													loading="lazy"
+                                                    loading="lazy"
                                                     className="inline-block h-6 w-6 object-center object-cover rounded-full "
                                                 />
                                             </div>
