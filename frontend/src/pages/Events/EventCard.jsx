@@ -49,7 +49,7 @@ const EventCard = ({
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const { ref: videoRef, inView: isInView } = useInView({ threshold: 0.1 }); // Detect when in view (reduced threshold)
+    const { ref, inView: isInView } = useInView({ threshold: 0.1 }); // Detect when in view (reduced threshold)
 
     const playerRef = useRef(null);
     const [player, setPlayer] = useState(null);
@@ -57,28 +57,32 @@ const EventCard = ({
     const [videoError, setVideoError] = useState(false);
 
 
+    // Initialize player when video is shown and in view
     useEffect(() => {
-        if (isInView && playerRef.current && !player) {
+        // Only initialize player when video is shown and in view
+        if (showVideo && isInView && playerRef.current?.plyr) {
             setPlayer(playerRef.current.plyr);
         }
 
+        // Cleanup function to destroy player when component unmounts
         return () => {
             if (player) {
-                player.destroy(); // Destroy on unmount or when out of view
+                player.destroy(); // Destroy on unmount
                 setPlayer(null); // Clear player instance
             }
         };
-    }, [isInView, player]);
+    }, [isInView, showVideo, player]);
 
 
     const handlePlayClick = () => {
-        if (player) {
-          setShowVideo(true); // Show the video player
-            player.play();    // Autoplay
-        } else {
-          console.error("Plyr instance not available."); //Handle cases where player isn't ready.
-        }
+        setShowVideo(true); // Always show the video player when clicked
 
+        // Try to play if player is available
+        if (player) {
+            player.play().catch(error => {
+                console.error("Error playing video:", error);
+            });
+        }
     };
 
     const handleImageError = () => {
@@ -92,7 +96,7 @@ const EventCard = ({
     }
 
     return (
-        <div className="relative" ref={videoRef}>
+        <div className="relative" ref={ref}>
             <div
                 className="absolute -top-5 -right-2 z-[1000] cursor-pointer"
                 onClick={(e) => {
@@ -134,8 +138,11 @@ const EventCard = ({
                     )}
 
                    {!showVideo && !thumbnail && (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-                          No Thumbnail
+                        <div 
+                          className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                          onClick={handlePlayClick}
+                        >
+                          Click to Play Video
                         </div>
                    )}
 
