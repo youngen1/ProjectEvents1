@@ -7,7 +7,7 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: function () {
         return this.isNew;
-      }, // Required only on creation
+      }, 
     },
     thumbnail: { type: String },
     event_images: [String],

@@ -1,7 +1,7 @@
-feat(email): update email configuration to use Gmail
+refactor(backend): remove commented out code from index.js
 
-Update the email configuration in .env file to use Gmail's SMTP server:
-- Set EMAIL_HOST to smtp.gmail.com
-- Set EMAIL_PORT to 587 (for TLS)
+- Removed legacy commented out code that was no longer in use
+- Improved code readability and maintainability
+- Reduced file size and cognitive load for developers
 
-These changes enable the application to send emails through Gmail's SMTP server.
+This change doesn't affect functionality as the removed code was already commented out and not being executed.
