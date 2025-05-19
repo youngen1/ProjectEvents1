@@ -7,7 +7,7 @@ import "plyr-react/plyr.css";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useInView } from "react-intersection-observer";
+import { useInView } from "react-intersection-observer"; // Import hook
 
 const videoOptions = {
     controls: [
@@ -24,40 +24,37 @@ const videoOptions = {
         fallback: true,
         iosNative: true,
     },
-    clickToPlay: true, // This is good, but we're manually triggering play initially
+    clickToPlay: true,
     ratio: "16:9",
-    // previewThumbnails: { enabled: false }, // Not needed if we use our own thumbnail logic
-    autoplay: false, // We will manually play
 };
 
 const EventCard = ({
-                       _id,
-                       event_title,
-                       // ... other props
-                       event_video,
-                       thumbnail,
-                       created_by,
-                       category,
-                       ticket_price,
-                       event_date_and_time,
-                       booked_tickets,
-                       handleFetchJoinedMembers,
-                       handleEventClick,
-                       handleShare,
-                       event_description,
-                       event_address
-                   }) => {
+    _id,
+    event_title,
+    event_description,
+    created_by,
+    event_video,
+    thumbnail,
+    category,
+    ticket_price,
+    event_date_and_time,
+    event_duration,
+    event_address,
+    booked_tickets,
+    handleFetchJoinedMembers,
+    handleEventClick,
+    handleShare,
+}) => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const { ref: cardRef, inView: isInView } = useInView({ threshold: 0.1, triggerOnce: false }); // Keep observing
+    const { ref: cardRef, inView: isInView } = useInView({ threshold: 0.1, triggerOnce: false });
 
-    const plyrRef = useRef(null); // Ref for the Plyr component instance
-    const [showVideo, setShowVideo] = useState(false);
+    const playerRef = useRef(null);
+    const [player, setPlayer] = useState(null);
+    const [showVideo, setShowVideo] = useState(false); // State to control video display
     const [videoError, setVideoError] = useState(false);
-    const [isPlyrReady, setIsPlyrReady] = useState(false); // Track if Plyr internal player is ready
-
-    // Effect to play video when showVideo becomes true and Plyr is ready
+    const [isPlyrReady, setIsPlyrReady] = useState(false);
     useEffect(() => {
         if (showVideo && isInView && plyrRef.current && isPlyrReady) {
             const playerInstance = plyrRef.current?.plyr;
@@ -70,7 +67,6 @@ const EventCard = ({
         }
     }, [showVideo, isInView, isPlyrReady]); // Depend on isPlyrReady
 
-    // Effect to destroy Plyr instance when component unmounts or video is hidden
     useEffect(() => {
         return () => {
             if (plyrRef.current?.plyr) {
@@ -88,119 +84,185 @@ const EventCard = ({
 
     const handlePlayClick = () => {
         if (event_video) {
-            setShowVideo(true); // This will trigger the rendering of the Plyr component
-            setVideoError(false); // Reset video error state
+          setShowVideo(true); // Show the video player
+            setVideoError(false)// Autoplay
         } else {
-            toast.error("No video available for this event.");
+            toast.error("No video available for this event.")
+          console.error("Plyr instance not available."); //Handle cases where player isn't ready.
         }
+
     };
 
     const handleImageError = () => {
-        console.error("Error loading thumbnail image:", thumbnail);
-        // Optionally set a flag to show a placeholder if thumbnail fails
+        console.error("Error loading image:", thumbnail);
     };
 
     const handleVideoError = (e) => {
-        console.error("Plyr video error event:", e);
-        setVideoError(true);
-        setShowVideo(false); // Hide video player on error, show thumbnail again
-        setIsPlyrReady(false); // Reset ready state on error
+      console.error("Error playing video:", e);
+      setVideoError(true);
+      setShowVideo(false);
+      setIsPlyrReady(false);
     };
-
-    // This callback is provided by plyr-react to get the instance
-    // It's more reliable than trying to grab it from the ref immediately
     const handlePlayerReady = (player) => {
-        // `player` here is the actual Plyr API instance
         if (player) {
             setIsPlyrReady(true);
-            // You could store `player` in a ref if you need to access it elsewhere directly,
-            // but for simple play/pause, useEffect based on state is often cleaner.
-            // For example: internalPlayerRef.current = player;
-            console.log("Plyr instance ready for event:", event_title);
-
-            // Optional: Add event listeners directly if needed
-            // player.on('error', (event) => handleVideoError(event.detail.plyr.source));
-            player.on('ended', () => {
-                console.log("Video ended for event:", event_title);
-                setShowVideo(false); // Optionally hide player when video ends
+            console.log("player isntance ready for event", event_title);
+            player.on("ended", () => {
+                console.log("Video ended for event", event_title);
+                setShowVideo(false);
                 setIsPlyrReady(false);
+
             });
         }
-    };
 
+    }
 
     return (
-        <div className="relative" ref={cardRef}>
-            {/* User Profile Avatar */}
+        <div className="relative" ref={videoRef}>
             <div
                 className="absolute -top-5 -right-2 z-[1000] cursor-pointer"
-                onClick={(e) => { /* ... your navigation logic ... */ }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (user) {
+                        navigate(`/user-profile/${created_by?._id}`);
+                    } else {
+                        toast.error("Please login to view user profile");
+                        navigate("/login");
+                    }
+                }}
             >
-                {/* ... your avatar JSX ... */}
+                {created_by?.profile_picture ? (
+                    <img
+                        src={created_by?.profile_picture}
+                        alt="profile"
+                        loading="lazy"
+                        className="w-12 h-12 rounded-full bg-gray-100 object-cover object-center"
+                    />
+                ) : (
+                    <div className="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">
+                        {created_by?.fullname?.charAt(0)?.toUpperCase()}
+                    </div>
+                )}
             </div>
 
             <div className="bg-white shadow rounded-lg overflow-hidden transition-transform transform hover:scale-105">
-                <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden bg-black"> {/* Added bg-black for better video transition */}
-                    {!showVideo && (
-                        thumbnail ? (
-                            <img
-                                src={thumbnail}
-                                alt={event_title + " Thumbnail"}
-                                className="w-full h-full object-cover object-center cursor-pointer"
-                                onClick={handlePlayClick}
-                                onError={handleImageError}
-                                loading="lazy" // Good for performance
-                            />
-                        ) : (
-                            <div
-                                className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 cursor-pointer"
-                                onClick={handlePlayClick} // Allow click even if no thumbnail
-                            >
-                                {event_video ? "Play Video" : "No Preview Available"}
-                            </div>
-                        )
-                    )}
 
-                    {showVideo && isInView && event_video && !videoError && (
-                        <Plyr
-                            ref={plyrRef} // Attach ref
-                            source={{
-                                type: "video",
-                                sources: [{ src: event_video, provider: 'html5', type: "video/mp4" }], // Specify provider
-                            }}
-                            options={videoOptions}
-                            onReady={handlePlayerReady} // Use the onReady callback
-                            onError={(error) => handleVideoError(error)} // Plyr's own error event
+              <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden">
+                    {/* Show Thumbnail Initially */}
+                    {!showVideo && thumbnail && (
+                        <img
+                            src={thumbnail}
+                            alt={event_title + " Thumbnail"}
+                            className="w-full h-full object-cover object-center cursor-pointer"
+                            onClick={handlePlayClick}
+                            onError={handleImageError}
                         />
                     )}
 
-                    {videoError && (
-                        <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center text-red-500 p-4 text-center">
-                            <p>Video could not be loaded.</p>
-                            <button
-                                onClick={() => {
-                                    setVideoError(false);
-                                    setShowVideo(false); // Go back to thumbnail
-                                }}
-                                className="mt-2 px-3 py-1 bg-purple-500 text-white rounded text-sm"
-                            >
-                                Show Thumbnail
-                            </button>
+                   {!showVideo && !thumbnail && (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                          No Thumbnail
                         </div>
+                   )}
+
+                    {/* Show Video Player on Click (and if in view) */}
+                    {showVideo && isInView && (
+                        <Plyr
+                            ref={playerRef}
+                            source={{
+                                type: "video",
+                                sources: [{ src: event_video, type: "video/mp4" }],
+                            }}
+                            options={videoOptions}
+                            onError={handleVideoError} // Handle video errors
+                        />
                     )}
+                    {videoError && (<div className="w-full h-full bg-red-200 flex items-center justify-center text-red-500">Error Loading Video.</div>)}
                 </div>
 
-                {/* Event Details */}
                 <div
                     onClick={() => handleEventClick(_id)}
                     className="p-4 cursor-pointer"
                 >
-                    {/* ... your event details JSX ... */}
+                    <div className="flex justify-between items-center mb-2">
+                        <span
+                            className={`text-sm ${ticket_price === 0 ? "bg-green-500" : "bg-purple-500"
+                                } text-white px-2 py-1 rounded font-semibold`}
+                        >
+                            {ticket_price === 0 ? "Free" : `R${ticket_price}`}
+                        </span>
+                        <span className="text-purple-700 bg-purple-100 px-2 py-1 rounded-full text-sm font-semibold">
+                            {category}
+                        </span>
+                    </div>
+                    <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                            {moment(event_date_and_time).format("DD MMM YYYY HH:mm")}
+                        </p>
+                        <h3 className="text-lg font-semibold text-gray-900 mt-1">
+                            {event_title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {event_address?.address}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2 line-clamp-3">{event_description}</p>
+                    </div>
                 </div>
 
-                {/* Booked Users & Share */}
+                {/* Show Booked Users or No Attendees Message */}
                 <div className="p-4 border-t border-gray-200">
-                    {/* ... your booked users & share JSX ... */}
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-x-3">
+                            {booked_tickets && booked_tickets.length > 0 ? (
+                                <div
+                                    className="flex -space-x-1 overflow-hidden cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (user) {
+                                            handleFetchJoinedMembers(_id);
+                                        } else {
+                                            toast.error("Please login to view members");
+                                            navigate("/login");
+                                        }
+                                    }}
+                                >
+                                    {booked_tickets
+                                        ?.filter(
+                                            (user, index, self) =>
+                                                index === self.findIndex((u) => u._id === user._id)
+                                        )
+                                        ?.slice(0, 3)
+                                        ?.map((user, index) => (
+                                            <div key={index}>
+                                                <img
+                                                    alt={user.fullname}
+                                                    src={user.profile_picture}
+													loading="lazy"
+                                                    className="inline-block h-6 w-6 object-center object-cover rounded-full "
+                                                />
+                                            </div>
+                                        ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">No one has joined yet</p>
+                            )}
+                            <p className="text-sm text-gray-500">
+                                {booked_tickets && booked_tickets.length > 0
+                                    ? `${booked_tickets.length} Members Joined`
+                                    : ""}
+                            </p>
+                        </div>
+                        {/* Share Button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare(event_title, event_description, _id);
+                            }}
+                            className="bg-purple-500 text-white px-4 flex items-center gap-x-2 py-1.5 rounded-md font-medium hover:bg-purple-600"
+                        >
+                            <IoShareSocialOutline />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
