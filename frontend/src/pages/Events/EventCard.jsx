@@ -67,7 +67,6 @@ const EventCard = ({
         // Cleanup function to destroy player when component unmounts
         return () => {
             if (player) {
-                player.destroy(); // Destroy on unmount
                 setPlayer(null); // Clear player instance
             }
         };
