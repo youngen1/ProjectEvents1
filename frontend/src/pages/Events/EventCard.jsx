@@ -1,10 +1,9 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { IoShareSocialOutline } from "react-icons/io5";
-
 import Plyr from "plyr-react";
 import "plyr-react/plyr.css";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // Make sure useNavigate is imported
 import { useAuth } from "../../context/AuthContext";
 import { useInView } from "react-intersection-observer";
 
@@ -39,9 +38,9 @@ const EventCard = ({
                        handleFetchJoinedMembers,
                        handleEventClick,
                        handleShare,
-                       booked_tickets, // Added for completeness from your example
+                       booked_tickets,
                    }) => {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Initialize useNavigate
     const { user } = useAuth();
 
     const { ref: cardVisibilityRef, inView: isInView } = useInView({
@@ -53,6 +52,7 @@ const EventCard = ({
     const [showVideo, setShowVideo] = useState(false);
     const [videoError, setVideoError] = useState(false);
 
+    // ... (useEffect hooks and handlers remain largely the same)
     useEffect(() => {
         const player = plyrInstanceRef.current;
         if (player && showVideo && !videoError) {
@@ -139,87 +139,109 @@ const EventCard = ({
 
     const shouldRenderPlyr = showVideo && !videoError && event_video;
 
-    return (
-        // Main container for card + intersection observer
-        <div className="relative" ref={cardVisibilityRef}> {/* This outer relative might not be needed unless you position something else against it */}
-            {/* Event Card Content Box - THIS IS THE NEW PARENT FOR THE AVATAR */}
-            <div className="relative bg-white shadow rounded-lg overflow-hidden transition-transform transform hover:scale-105">
-                {/* User Profile Avatar - MOVED INSIDE and STYLED */}
-                <div className="absolute top-2 right-2 z-10"> {/* Adjust top/right for precise positioning */}
-                    {created_by?.profile_picture ? (
-                        <img
-                            src={created_by.profile_picture}
-                            alt="Profile"
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" // Adjusted size and added border
-                        />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 text-lg font-semibold border-2 border-white shadow-sm">
-                            {/* Display initials or a placeholder icon if no picture */}
-                            {created_by?.username ? created_by.username.charAt(0).toUpperCase() : 'U'}
-                        </div>
-                    )}
-                </div>
+    const handleAvatarClick = (e) => {
+        e.stopPropagation(); // Prevent triggering handleEventClick on the card below
+        if (created_by && created_by._id) {
+            console.log(`Navigating to profile: /profile/${created_by._id}`);
+            navigate(`/profile/${created_by._id}`); // Or your specific profile route
+        } else if (created_by && created_by.username) {
+            // Fallback or alternative if ID is not primary identifier for profile route
+            console.log(`Navigating to profile: /profile/${created_by.username}`);
+            navigate(`/profile/${created_by.username}`);
+        } else {
+            console.warn("Cannot navigate to profile: created_by._id or created_by.username is missing.");
+        }
+    };
 
-                {/* Video/Thumbnail Area */}
-                <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden bg-black">
-                    {!shouldRenderPlyr && (
-                        thumbnail ? (
+
+    return (
+        <div className="mb-8" ref={cardVisibilityRef}> {/* Added mb-8 for spacing if avatars overlap next card, adjust as needed */}
+            {/* New Relative Wrapper for Card and Avatar */}
+            <div className="relative">
+                {/* User Profile Avatar - Positioned absolutely relative to the new wrapper */}
+                {created_by && (
+                    <div
+                        onClick={handleAvatarClick}
+                        className="absolute top-0 right-0 z-20 cursor-pointer
+                                   transform translate-x-1/3 -translate-y-1/3  /* Adjust these for precise 'outside' positioning */
+                                   hover:scale-110 transition-transform"
+                        title={`View ${created_by.username || 'creator'}'s profile`}
+                    >
+                        {created_by.profile_picture ? (
                             <img
-                                src={thumbnail}
-                                alt={event_title + " Thumbnail"}
-                                className="w-full h-full object-cover object-center cursor-pointer"
-                                onClick={handlePlayClick}
-                                onError={handleImageError}
-                                loading="lazy"
+                                src={created_by.profile_picture}
+                                alt={`${created_by.username || 'Creator'}'s profile`}
+                                className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-lg"
                             />
                         ) : (
-                            <div
-                                className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 cursor-pointer"
-                                onClick={handlePlayClick}
-                            >
-                                {event_video ? "Play Video" : "No Preview Available"}
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-semibold border-2 border-white shadow-lg">
+                                {created_by.username ? created_by.username.charAt(0).toUpperCase() : 'U'}
                             </div>
-                        )
-                    )}
+                        )}
+                    </div>
+                )}
 
-                    {shouldRenderPlyr && (
-                        <Plyr
-                            key={event_video}
-                            source={{
-                                type: "video",
-                                sources: [{ src: event_video, provider: 'html5', type: "video/mp4" }],
-                            }}
-                            options={{ ...videoOptions }}
-                            onReady={handlePlayerReady}
-                            onError={handlePlyrComponentError}
+                {/* Event Card Content Box */}
+                {/* Added z-10 so it's below the avatar if they were to perfectly overlap */}
+                <div className="bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105 z-10">
+                    <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden bg-black">
+                        {!shouldRenderPlyr && (
+                            thumbnail ? (
+                                <img
+                                    src={thumbnail}
+                                    alt={event_title + " Thumbnail"}
+                                    className="w-full h-full object-cover object-center cursor-pointer"
+                                    onClick={handlePlayClick}
+                                    onError={handleImageError}
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div
+                                    className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 cursor-pointer"
+                                    onClick={handlePlayClick}
+                                >
+                                    {event_video ? "Play Video" : "No Preview Available"}
+                                </div>
+                            )
+                        )}
+
+                        {shouldRenderPlyr && (
+                            <Plyr
+                                key={event_video}
+                                source={{
+                                    type: "video",
+                                    sources: [{ src: event_video, provider: 'html5', type: "video/mp4" }],
+                                }}
+                                options={{ ...videoOptions }}
+                                onReady={handlePlayerReady}
+                                onError={handlePlyrComponentError}
+                            />
+                        )}
+
+                        {videoError && showVideo && !shouldRenderPlyr && (
+                            <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center text-red-500 p-4 text-center">
+                                <p>Video for "{event_title}" could not be loaded.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div onClick={() => handleEventClick(_id)} className="p-4 cursor-pointer">
+                        <h3 className="text-lg font-semibold text-gray-800">{event_title}</h3>
+                        <p className="text-sm text-gray-600 truncate">{event_description}</p>
+                    </div>
+
+                    <div className="p-4 border-t border-gray-200 flex justify-between items-center">
+                        <button
+                            onClick={() => handleFetchJoinedMembers && handleFetchJoinedMembers(_id)}
+                            className="text-xs text-blue-500 hover:underline"
+                        >
+                            {booked_tickets?.length || 0} Joined
+                        </button>
+                        <IoShareSocialOutline
+                            className="text-xl text-gray-500 hover:text-blue-500 cursor-pointer"
+                            onClick={() => handleShare && handleShare(_id, event_title)}
                         />
-                    )}
-
-                    {videoError && showVideo && !shouldRenderPlyr && (
-                        <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center text-red-500 p-4 text-center">
-                            <p>Video for "{event_title}" could not be loaded.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Event Details */}
-                <div onClick={() => handleEventClick(_id)} className="p-4 cursor-pointer">
-                    <h3 className="text-lg font-semibold text-gray-800">{event_title}</h3>
-                    <p className="text-sm text-gray-600 truncate">{event_description}</p>
-                </div>
-
-                {/* Booked Users & Share */}
-                <div className="p-4 border-t border-gray-200 flex justify-between items-center">
-                    <button
-                        onClick={() => handleFetchJoinedMembers && handleFetchJoinedMembers(_id)}
-                        className="text-xs text-blue-500 hover:underline"
-                    >
-                        {booked_tickets?.length || 0} Joined
-                    </button>
-                    <IoShareSocialOutline
-                        className="text-xl text-gray-500 hover:text-blue-500 cursor-pointer"
-                        onClick={() => handleShare && handleShare(_id, event_title)}
-                    />
+                    </div>
                 </div>
             </div>
         </div>
