@@ -77,6 +77,9 @@ export default function AddNewEvent() {
         formik.setFieldValue("thumbnail_file", null); // Clear previous
         setThumbnailPreviewUrl(null); // Clear preview
 
+        // Mark thumbnail_file as touched to trigger validation
+        formik.setFieldTouched("thumbnail_file", true);
+
         try {
             const result = await generateThumbnailFromVideo(videoFile);
             if (result) {
@@ -100,6 +103,9 @@ export default function AddNewEvent() {
         formik.setFieldValue("event_video", videoFile);
         setVideoUploadProgress(0);
 
+        // Mark thumbnail_file as touched to trigger validation
+        formik.setFieldTouched("thumbnail_file", true);
+
         if (videoFile) {
             if (!isManualThumbnail) { // Only generate if no manual thumbnail is active
                 await triggerVideoThumbnailGeneration(videoFile);
@@ -119,6 +125,8 @@ export default function AddNewEvent() {
         const manualFile = event.currentTarget.files[0];
         const manualThumbnailInput = document.getElementById('manual_thumbnail');
 
+        // Mark thumbnail_file as touched to trigger validation
+        formik.setFieldTouched("thumbnail_file", true);
 
         if (manualFile) {
             if (!manualFile.type.startsWith('image/')) {
@@ -151,6 +159,9 @@ export default function AddNewEvent() {
         formik.setFieldValue("thumbnail_file", null);
         setThumbnailPreviewUrl(null);
         setIsManualThumbnail(false);
+
+        // Mark thumbnail_file as touched to trigger validation
+        formik.setFieldTouched("thumbnail_file", true);
 
         const manualThumbnailInput = document.getElementById('manual_thumbnail');
         if (manualThumbnailInput) {
@@ -202,7 +213,8 @@ export default function AddNewEvent() {
                 .test("fileType", "Unsupported video format", (value) => {
                     return value && value.type && value.type.startsWith("video/");
                 }),
-            thumbnail_file: Yup.mixed().nullable() // Can be null if generation fails or not provided
+            thumbnail_file: Yup.mixed()
+                .required("Thumbnail is required")
                 .test("fileTypeImage", "Custom thumbnail must be an image", function(value) {
                     // Only validate if it's a manual thumbnail and a file exists
                     if (this.parent.isManualThumbnail && value) { // 'isManualThumbnail' not directly in yup context, this might need adjustment or be handled outside
@@ -230,12 +242,10 @@ export default function AddNewEvent() {
             }
 
             if (!values.thumbnail_file) {
-                // This can happen if generation failed and no manual one was uploaded
-                toast.warning("Thumbnail is missing. Proceeding without it, but it's recommended.");
-                // Depending on backend, you might want to prevent submission:
-                // toast.error("Thumbnail is missing. Cannot create event.");
-                // setSubmitting(false);
-                // return;
+                // Prevent submission if thumbnail is missing
+                toast.error("Thumbnail is missing. Cannot create event.");
+                setSubmitting(false);
+                return;
             }
 
             const formData = new FormData();
@@ -513,7 +523,7 @@ export default function AddNewEvent() {
                             {/* Thumbnail Upload & Preview Section */}
                             <div className="col-span-full sm:col-span-3">
                                 <label htmlFor="manual_thumbnail" className="block text-sm font-medium leading-6 text-gray-900">
-                                    Event Thumbnail
+                                    Event Thumbnail *
                                 </label>
                                 <div className="mt-2">
                                     <input
@@ -525,10 +535,10 @@ export default function AddNewEvent() {
                                         onChange={handleManualThumbnailChange}
                                     />
                                     <p className="text-xs text-gray-600">
-                                        Optional (JPG, PNG, WEBP). If not provided, one will be generated from the video.
+                                        Required (JPG, PNG, WEBP). You can upload your own or one will be generated from the video.
                                     </p>
-                                    {/* Error for thumbnail_file can be shown here if needed, especially if manual upload fails type validation */}
-                                    {formik.touched.thumbnail_file && formik.errors.thumbnail_file && isManualThumbnail ? (
+                                    {/* Error for thumbnail_file shown for all validation errors */}
+                                    {formik.touched.thumbnail_file && formik.errors.thumbnail_file ? (
                                         <div className="text-red-500 text-xs mt-1">{formik.errors.thumbnail_file}</div>
                                     ) : null}
                                 </div>
