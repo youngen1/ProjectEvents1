@@ -65,11 +65,6 @@ const EventCard = ({
             if(!isPlyrComponentActive){
                 console.log(`[${event_title}] Mounting Plyr component.`);
                 setIsPlyrComponentActive(true);
-            } else{
-                if (isPlyrComponentActive){
-                    console.log(`[${event_title}] Unmounting Plyr component`)
-                    setIsPlyrComponentActive(false);
-                }
             }
             if (plyrApiInstanceRef.current){
                 console.log(`[${event_title}] Destroying Plyr API instance (due to showVideo/isInView/videoError change)`);

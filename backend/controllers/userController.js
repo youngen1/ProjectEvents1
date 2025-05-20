@@ -612,7 +612,9 @@ exports.requestPasswordReset = async (req, res) => {
         subject: "Password Reset Request",
         html: `<p>Click the link below to reset your password:</p>
                <a href="${resetLink}">Reset Password</a>
-               <p>This link will expire in 1 hour.</p>`,
+               <p>This link will expire in 1 hour.</p>
+                <p>Alternatively, you can copt rhis link and paste it into your browser:</p>
+                <p>${resetLink}</p>`,
       });
       res.status(200).json({ message: "Password reset email sent" });
     } catch (emailError) { // <------------------ ADDED: catch block for email sending errors
@@ -680,7 +682,7 @@ exports.changePasswordAfterLogin = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   try {
-    console.log(" currentPassword " , currentPassword , " and newPassword " , newPassword);
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -723,34 +725,7 @@ exports.makeAdmin = async (req, res) => {
   }
 };
 
-exports.manualPasswordReset = async (req, res) => {
-  try {
-    const email = "mtswenisabelo301@gmail.com";
-    const newPassword = "272756321";
 
-    // Find the user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update the user's password
-    user.password = hashedPassword;
-    await user.save();
-
-    res.status(200).json({
-      message: "Password has been reset successfully",
-      user: {
-        email: user.email
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 exports.getPlatformEarnings = async (req, res) => {
   try {
