@@ -1,5 +1,4 @@
 import React, { memo, useEffect, useRef, useState } from "react";
-import moment from "moment";
 import { IoShareSocialOutline } from "react-icons/io5";
 
 import Plyr from "plyr-react";
@@ -7,7 +6,7 @@ import "plyr-react/plyr.css";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useInView } from "react-intersection-observer"; // Import hook
+import { useInView } from "react-intersection-observer";
 
 const videoOptions = {
     controls: [
@@ -24,122 +23,150 @@ const videoOptions = {
         fallback: true,
         iosNative: true,
     },
-    clickToPlay: false,
+    clickToPlay: false, // We handle click on thumbnail
     ratio: "16:9",
-    autoplay: false
+    autoplay: false, // We control play logic
 };
 
 const EventCard = ({
-    _id,
-    event_title,
-    event_description,
-    created_by,
-    event_video,
-    thumbnail,
-    category,
-    ticket_price,
-    event_date_and_time,
-    event_duration,
-    event_address,
-    booked_tickets,
-    handleFetchJoinedMembers,
-    handleEventClick,
-    handleShare,
-}) => {
+                       _id,
+                       event_title,
+                       event_description,
+                       created_by,
+                       event_video,
+                       thumbnail,
+                       category,
+                       ticket_price,
+                       event_date_and_time,
+                       event_duration,
+                       event_address,
+                       booked_tickets,
+                       handleFetchJoinedMembers,
+                       handleEventClick,
+                       handleShare,
+                   }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const { ref: cardVisibilityRef, inView: isInView } = useInView({ threshold: 0.1, triggerOnce: false }); // Detect when in view (reduced threshold)
-    const plyrApiInstanceRef = useRef(null);
-    const playerRef = useRef(null);
-    const [player, setPlayer] = useState(null);
-    const [showVideo, setShowVideo] = useState(false); // State to control video display
+    const { ref: cardVisibilityRef, inView: isInView } = useInView({
+        threshold: 0.1,
+        triggerOnce: false,
+    });
+    const plyrInstanceRef = useRef(null); // Stores the Plyr API instance
+
+    const [showVideo, setShowVideo] = useState(false);
     const [videoError, setVideoError] = useState(false);
-    const [isPlyrComponentActive, setIsPlyrComponentActive] = useState(false)
 
-    // Initialize player when video is shown and in view
+    // Effect to play/pause video based on visibility and showVideo state
     useEffect(() => {
-        // Only initialize player when video is shown and in view
-        if (showVideo && isInView && event_video && !videoError) {
+        const player = plyrInstanceRef.current;
 
-            if(!isPlyrComponentActive){
-                console.log(`[${event_title}] Mounting Plyr component.`);
-                setIsPlyrComponentActive(true);
-            }
-            if (plyrApiInstanceRef.current){
-                console.log(`[${event_title}] Destroying Plyr API instance (due to showVideo/isInView/videoError change)`);
-                try{
-                    plyrApiInstanceRef.current._destroy();
-
-                } catch (e) {
-                    console.error(`[${event_title}] Error during explicit Plyr API destroy:`, e)
+        if (player && showVideo && !videoError) {
+            if (isInView) {
+                if (player.paused) { // Only play if paused
+                    console.log(`[${event_title}] In view and paused, attempting to play.`);
+                    player.play().catch(error => {
+                        if (error.name === 'NotAllowedError') {
+                            console.warn(`[${event_title}] Autoplay was prevented for ${event_title}.`);
+                        } else {
+                            console.error(`[${event_title}] Error attempting to play video for ${event_title}:`, error);
+                        }
+                    });
                 }
-                plyrApiInstanceRef.current = null;
+            } else {
+                if (!player.paused && player.playing) { // Only pause if playing
+                    console.log(`[${event_title}] Out of view and playing, pausing ${event_title}.`);
+                    player.pause();
+                }
             }
         }
+    }, [isInView, showVideo, videoError, event_title]);
 
-        // Cleanup function to destroy player when component unmounts
+
+    // Cleanup Plyr instance when EventCard unmounts
+    useEffect(() => {
+        // This effect runs once on mount and its cleanup runs once on unmount.
         return () => {
-            if (plyrApiInstanceRef.current) {
-                console.log(`[${event_title}] Destroying Plyr API instance on EventCard unmount`);
+            if (plyrInstanceRef.current) {
+                console.log(`[${event_title}] EventCard unmounting, destroying Plyr instance for ${event_title}.`);
                 try {
-                    plyrApiInstanceRef.current.destroy();
+                    plyrInstanceRef.current.destroy();
                 } catch (e) {
-                    console.error(`[${event_title}] Error during unmount Plyr API destroy:`, e);
+                    console.error(`[${event_title}] Error during EventCard unmount Plyr destroy for ${event_title}:`, e);
                 }
-                 plyrApiInstanceRef.current = null;
+                plyrInstanceRef.current = null;
             }
         };
-    },  [showVideo, isInView, event_video, videoError, event_title, isPlyrComponentActive]);
+    }, [event_title]); // Add event_title to re-run cleanup if it changes, or use [] for pure mount/unmount
 
-    useEffect(() => {
-        if (isPlyrComponentActive && showVideo && isInView && plyrApiInstanceRef.current && !videoError) {
-            console.log(`[${event_title}] API instance ready, attempting to play.`);
-            plyrApiInstanceRef.current.play()
-                .catch(error => console.error(`[${event_title}] Error attempting to play video:`, error));
-        }
-    }, [isPlyrComponentActive, showVideo, isInView, videoError, event_title]);
-    
-    const handlePlayerReady = (player) => { // 'player' IS the Plyr API instance
+    const handlePlayerReady = (player) => {
         if (player) {
-            console.log(`[${event_title}] Plyr onReady called, API instance received.`);
-            plyrApiInstanceRef.current = player; // Store the API instance
+            console.log(`[${event_title}] Plyr onReady for ${event_title}.`);
+            plyrInstanceRef.current = player;
 
             player.on('ended', () => {
-                console.log(`[${event_title}] Video ended.`);
-                setShowVideo(false); // Will trigger the lifecycle useEffect to destroy player
+                console.log(`[${event_title}] Video ended for ${event_title}.`);
+                setShowVideo(false); // This will unmount <Plyr />
             });
 
             player.on('error', (event) => {
-                console.error(`[${event_title}] Plyr API instance 'error' event:`, event.detail?.plyr?.source, event);
-                setVideoError(true); // Will trigger the lifecycle useEffect
+                console.error(`[${event_title}] Plyr API instance 'error' event for ${event_title}:`, event.detail?.plyr?.source, event);
+                setVideoError(true);
+                setShowVideo(false); // Hide player on error
             });
+
+            // Attempt initial play if conditions met (card is visible, user clicked play)
+            if (showVideo && isInView && !videoError) {
+                console.log(`[${event_title}] Player ready and conditions met, attempting initial play for ${event_title}.`);
+                player.play().catch(error => {
+                    if (error.name === 'NotAllowedError') {
+                        console.warn(`[${event_title}] Initial autoplay onReady was prevented for ${event_title}.`);
+                    } else {
+                        console.error(`[${event_title}] Error attempting initial play onReady for ${event_title}:`, error);
+                    }
+                });
+            }
+        } else {
+            console.warn(`[${event_title}] Plyr onReady called with null player for ${event_title}.`);
         }
-    }
-    
+    };
+
     const handlePlayClick = () => {
         if (event_video) {
-            console.log(`[${event_title}] Thumbnail clicked, setting showVideo=true.`);
+            console.log(`[${event_title}] Thumbnail clicked for ${event_title}, setting showVideo=true.`);
+            // If a previous player instance exists and is somehow active, ensure it's cleaned up before creating a new one.
+            // This is less likely with the current setup as showVideo=false should unmount it.
+            if (plyrInstanceRef.current) {
+                try {
+                    console.log(`[${event_title}] Destroying existing Plyr instance before new play attempt.`);
+                    plyrInstanceRef.current.destroy();
+                } catch (e) {
+                    console.error(`[${event_title}] Error destroying old instance:`, e);
+                }
+                plyrInstanceRef.current = null;
+            }
             setShowVideo(true);
-            setVideoError(false); // Reset error state on new play attempt
+            setVideoError(false);
         } else {
             toast.error("No video available for this event.");
         }
     };
 
     const handleImageError = () => {
-        console.error("Error loading image:", thumbnail);
+        console.error(`Error loading thumbnail for ${event_title}:`, thumbnail);
     };
 
-    const handleVideoError = (e) => {
-      console.error("Error playing video:", e);
-      setVideoError(true);
-      setShowVideo(false); // Hide video player on error, show thumbnail instead
-    }
+    const handlePlyrComponentError = (error) => {
+        console.error(`[${event_title}] Plyr Component onError Prop for ${event_title}:`, error);
+        setVideoError(true);
+        setShowVideo(false);
+    };
+
+    const shouldRenderPlyr = showVideo && !videoError && event_video;
+    // const shouldRenderPlyr = showVideo && isInView && !videoError && event_video; // Alternative: unmount Plyr if not in view
 
     return (
         <div className="relative" ref={cardVisibilityRef}>
-            {/* User Profile Avatar */}
             <div className="avatar-wrapper">
                 {created_by?.profile_picture ? (
                     <img src={created_by.profile_picture} alt="Profile" className="avatar" />
@@ -150,7 +177,7 @@ const EventCard = ({
 
             <div className="bg-white shadow rounded-lg overflow-hidden transition-transform transform hover:scale-105">
                 <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden bg-black">
-                    {(!showVideo || videoError) && ( // Show thumbnail if not showing video OR if there's a video error
+                    {!shouldRenderPlyr && (
                         thumbnail ? (
                             <img
                                 src={thumbnail}
@@ -170,37 +197,44 @@ const EventCard = ({
                         )
                     )}
 
-                    {isPlyrComponentActive && !videoError && event_video && (
+                    {shouldRenderPlyr && (
                         <Plyr
-                            key={event_video} // Important for re-initialization if video source changes
+                            key={event_video} // Crucial for re-initialization if event_video changes
                             source={{
                                 type: "video",
                                 sources: [{ src: event_video, provider: 'html5', type: "video/mp4" }],
                             }}
-                            options={{ ...videoOptions }} // Spread options, ensure autoplay is false here if controlled by effect
+                            options={{ ...videoOptions }}
                             onReady={handlePlayerReady}
-                            onError={(error) => { // This is for plyr-react component wrapper errors
-                                console.error(`[${event_title}] Plyr Component onError Prop:`, error);
-                                setVideoError(true);
-                            }}
+                            onError={handlePlyrComponentError}
                         />
                     )}
 
-                    {videoError && showVideo && ( // Message if we tried to show video but failed
+                    {videoError && showVideo && !shouldRenderPlyr && ( // Error message if tried to show video but failed
                         <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center text-red-500 p-4 text-center">
-                            <p>Video could not be loaded.</p>
+                            <p>Video for "{event_title}" could not be loaded.</p>
                         </div>
                     )}
                 </div>
 
-                {/* Event Details */}
                 <div onClick={() => handleEventClick(_id)} className="p-4 cursor-pointer">
                     {/* ... your event details JSX ... */}
+                    <h3 className="text-lg font-semibold text-gray-800">{event_title}</h3>
+                    <p className="text-sm text-gray-600 truncate">{event_description}</p>
+                    {/* ... more details */}
                 </div>
 
-                {/* Booked Users & Share */}
-                <div className="p-4 border-t border-gray-200">
-                    {/* ... your booked users & share JSX ... */}
+                <div className="p-4 border-t border-gray-200 flex justify-between items-center">
+                    <button
+                        onClick={() => handleFetchJoinedMembers && handleFetchJoinedMembers(_id)}
+                        className="text-xs text-blue-500 hover:underline"
+                    >
+                        {booked_tickets?.length || 0} Joined
+                    </button>
+                    <IoShareSocialOutline
+                        className="text-xl text-gray-500 hover:text-blue-500 cursor-pointer"
+                        onClick={() => handleShare && handleShare(_id, event_title)}
+                    />
                 </div>
             </div>
         </div>
