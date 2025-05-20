@@ -11,33 +11,36 @@ const mongoose = require("mongoose");
 const admin = require("firebase-admin");
 const cors = require("cors");
 const path = require("path");
-const helmet = "helmet";
+const helmet = require("helmet");
 
 // --- Firebase Admin Initialization ---
 if (!admin.apps.length) {
   const firebasePrivateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !firebasePrivateKey) {
-    console.error("FATAL ERROR: Missing Firebase Admin SDK configuration environment variables.");
-    // In a real production scenario, you might want to throw an error or exit
-    // For now, we'll log and let it potentially fail at initializeApp if values are truly missing
-  }
+  const hasAllConfig = process.env.FIREBASE_PROJECT_ID && 
+                       process.env.FIREBASE_CLIENT_EMAIL && 
+                       firebasePrivateKey;
 
-  const firebaseConfig = {
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    // Ensure privateKey is correctly formatted (replace escaped newlines)
-    privateKey: firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined,
-  };
-
-  // Only initialize if all critical config is present
-  if (firebaseConfig.projectId && firebaseConfig.clientEmail && firebaseConfig.privateKey) {
-    admin.initializeApp({
-      credential: admin.credential.cert(firebaseConfig),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "event-management-1a68f.appspot.com" // Provide a default only if it makes sense for dev
-    });
-    console.log("Firebase Admin SDK initialized.");
+  if (!hasAllConfig) {
+    console.warn("WARNING: Missing Firebase Admin SDK configuration environment variables.");
+    console.warn("Firebase Admin SDK will NOT be initialized. Some features may be unavailable.");
   } else {
-    console.warn("Firebase Admin SDK NOT initialized due to missing configuration.");
+    try {
+      const firebaseConfig = {
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // Ensure privateKey is correctly formatted (replace escaped newlines)
+        privateKey: firebasePrivateKey.replace(/\\n/g, '\n'),
+      };
+
+      admin.initializeApp({
+        credential: admin.credential.cert(firebaseConfig),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "event-management-1a68f.appspot.com" // Provide a default only if it makes sense for dev
+      });
+      console.log("Firebase Admin SDK initialized successfully.");
+    } catch (error) {
+      console.error("Error initializing Firebase Admin SDK:", error.message);
+      console.warn("Firebase Admin SDK NOT initialized. Some features may be unavailable.");
+    }
   }
 }
 
