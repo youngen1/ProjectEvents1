@@ -44,30 +44,32 @@ const ChangePassword2 = memo(({ formik, loading }) => {
         >
           New Password
         </label>
-        <div className="mt-2 relative">
-          <input
-            id="newPassword"
-            name="newPassword"
-            type={showNewPassword ? "text" : "password"}
-            required
-            autoComplete="new-password"
-            {...formik.getFieldProps("newPassword")}
-            className={`block w-full rounded-md border-0 p-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 ${formik.touched.newPassword && formik.errors.password
-              ? "ring-red-500"
-              : ""
-              }`}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            onClick={toggleNewPasswordVisibility}
-          >
-            {showNewPassword ? (
-              <FaEyeSlash className="h-5 w-5 text-gray-400" />
-            ) : (
-              <FaEye className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
+        <div className="mt-2">
+          <div className="relative">
+            <input
+              id="newPassword"
+              name="newPassword"
+              type={showNewPassword ? "text" : "password"}
+              required
+              autoComplete="new-password"
+              {...formik.getFieldProps("newPassword")}
+              className={`block w-full rounded-md border-0 p-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 ${formik.touched.newPassword && formik.errors.password
+                ? "ring-red-500"
+                : ""
+                }`}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={toggleNewPasswordVisibility}
+            >
+              {showNewPassword ? (
+                <FaEyeSlash className="h-5 w-5 text-gray-400" />
+              ) : (
+                <FaEye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
           {formik.touched.newPassword && formik.errors.newPassword ? (
             <div className="text-red-500 text-sm mt-1">
               {formik.errors.newPassword}
@@ -83,30 +85,32 @@ const ChangePassword2 = memo(({ formik, loading }) => {
         >
           Confirm Password
         </label>
-        <div className="mt-2 relative">
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            required
-            autoComplete="new-password"
-            {...formik.getFieldProps("confirmPassword")}
-            className={`block w-full rounded-md border-0 p-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 ${formik.touched.confirmPassword && formik.errors.password
-              ? "ring-red-500"
-              : ""
-              }`}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            onClick={toggleConfirmPasswordVisibility}
-          >
-            {showConfirmPassword ? (
-              <FaEyeSlash className="h-5 w-5 text-gray-400" />
-            ) : (
-              <FaEye className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
+        <div className="mt-2">
+          <div className="relative">
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              autoComplete="new-password"
+              {...formik.getFieldProps("confirmPassword")}
+              className={`block w-full rounded-md border-0 p-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 ${formik.touched.confirmPassword && formik.errors.password
+                ? "ring-red-500"
+                : ""
+                }`}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={toggleConfirmPasswordVisibility}
+            >
+              {showConfirmPassword ? (
+                <FaEyeSlash className="h-5 w-5 text-gray-400" />
+              ) : (
+                <FaEye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
           {formik.touched.confirmPassword && formik.errors.confirmPassword ? (
             <div className="text-red-500 text-sm mt-1">
               {formik.errors.confirmPassword}
