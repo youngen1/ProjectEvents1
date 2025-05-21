@@ -7,6 +7,7 @@ import { toast, Toaster } from "sonner";
 import Footer from "../../components/Footer";
 import Logo from "../../components/Logo";
 import axiosInstance from "../../utils/axiosInstance";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 // Memoize the validation schema
 const validationSchema = Yup.object({
