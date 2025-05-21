@@ -110,8 +110,7 @@ const updateEventSchema = Joi.object({
     gender_restriction: Joi.array().items(Joi.string()),
 }).min(1); // Require at least one field to be updated
 
-const { v4: uuidv4 } = require('uuid'); // Make sure you have this import
-// Assuming 'bucket' is already initialized: const bucket = admin.storage().bucket();
+
 
 eventController.createEventWithUpload = async (req, res, next) => { // Added next for error handling
     // ... (initial checks and body validation from your code) ...
