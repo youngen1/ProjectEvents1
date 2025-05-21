@@ -6,7 +6,6 @@ import NavBar from "../../components/NavBar";
 import { useAuth } from "../../context/AuthContext";
 import UpdateProfileModel from "./UpdateProfileModel";
 import WithdrawModel from "./WithdrawModel";
-import UserEvents from "./UserEvents";
 import axiosInstance from "../../utils/axiosInstance";
 import { storage } from "../../utils/firebaseConfig";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
@@ -24,7 +23,6 @@ export default function Finance() {
     requestWithdrawal,
     updateProfile,
   } = useAuth();
-  const [myEvents, setMyEvents] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBankAccountModalOpen, setIsBankAccModalOpen] = useState(false);
@@ -36,23 +34,18 @@ export default function Finance() {
   console.log("user earnings " , user.total_earnings );
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchEarnings = async () => {
       try {
-        const res = await axiosInstance.get(`/events/getUserEvents`);
-
-          const earnings = await axiosInstance.get('/events/admin/earnings');
+        const earnings = await axiosInstance.get('/events/admin/earnings');
         console.log(" earnings from backend ", earnings?.data);
-         setTotalEarnings( Number(earnings?.data.totalEarnings).toFixed(2));
-        console.log("my events", res?.data);
-        setMyEvents(res?.data);
       } catch (error) {
         console.log(error);
-        toast.error("Failed to fetch events");
+        toast.error("Failed to fetch earnings");
       }
     };
 
     if (user?._id) {
-      fetchEvents();
+      fetchEarnings();
     }
   }, [user?._id]);
 
