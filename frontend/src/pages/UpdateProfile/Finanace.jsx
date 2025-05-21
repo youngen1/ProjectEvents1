@@ -20,7 +20,7 @@ export default function Finance() {
   const {
     user,
     addBankAccount,
-   
+
     requestWithdrawal,
     updateProfile,
   } = useAuth();
@@ -200,7 +200,7 @@ export default function Finance() {
                   />
                 )}
 
-                
+
                 {isFollowingModalOpen && (
                   <FollowingModel
                     isOpen={isFollowingModalOpen}
@@ -287,9 +287,9 @@ export default function Finance() {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-500">Available Balance</p>
-                    <p className="text-3xl font-bold text-gray-900">R{user.total_earnings || 0}</p>
+                    <p className="text-3xl font-bold text-gray-900">R{totalEarnings || 0}</p>
                   </div>
-                  {user?.total_earnings > 10 && (
+                  {totalEarnings > 10 && (
                     <button
                       type="button"
                       className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-md"
@@ -312,7 +312,7 @@ export default function Finance() {
               </div>
             </div>
 
-          
+
           </div>
         </main>
       </div>
