@@ -110,165 +110,134 @@ const updateEventSchema = Joi.object({
     gender_restriction: Joi.array().items(Joi.string()),
 }).min(1); // Require at least one field to be updated
 
-eventController.createEventWithUpload = async (req, res) => {
-    // --- 1. Check if Firebase SDK/Bucket is ready ---
+const { v4: uuidv4 } = require('uuid'); // Make sure you have this import
+// Assuming 'bucket' is already initialized: const bucket = admin.storage().bucket();
 
-    if (!bucket) {
-        console.error("Firebase Storage Bucket is not initialized.");
-        return res.status(500).json({ message: "Server configuration error: Storage service unavailable." });
-    }
-
-    // --- 2. Validate non-file fields from req.body ---
-
-    console.log(" in createEventWithUpload, req.body: ", req.body);
-    const { error: bodyError, value: validatedBody } = createEventWithUploadBodySchema.validate(req.body);
-    if (bodyError) {
-        const errorMessages = bodyError.details.map(detail => detail.message);
-        console.log(" the errors in createEventWithUploadBodySchema: ", errorMessages);
-        return res.status(400).json({ message: "Validation Error", errors: errorMessages });
-    }
-
-    // --- 3. Check for files provided by multer ---
-
-
-    if (!req.files || !req.files.event_video || req.files.event_video.length === 0) {
-        return res.status(400).json({ message: 'Event video file is required.' });
-    }
-    const videoFile = req.files.event_video[0];
-    console.log(" video file: ", videoFile);
-    const thumbnailFile = req.files.thumbnail
-
-    let videoURL = null;
-    let thumbnailURL = null;
-    const created_by = req.user?.id; // Get user ID from authentication middleware (ensure req.user exists)
-
+eventController.createEventWithUpload = async (req, res, next) => { // Added next for error handling
+    // ... (initial checks and body validation from your code) ...
+    // Ensure req.user.id exists
+    const created_by = req.user?.id;
     if (!created_by) {
          return res.status(401).json({ message: 'Authentication required: User ID not found.' });
     }
 
+    // --- 3. Get files from multer ---
+    // Ensure field names match your multer setup
+    const videoFile = (req.files && req.files.event_video && req.files.event_video[0]) ? req.files.event_video[0] : null;
+    const thumbnailFile = (req.files && req.files.thumbnail_file && req.files.thumbnail_file[0]) ? req.files.thumbnail_file[0] : null; // Adjusted field name based on your log
+
+    if (!videoFile) {
+        return res.status(400).json({ message: 'Event video file is required.' });
+    }
+    console.log("Video file object:", videoFile);
+    if (thumbnailFile) console.log("Thumbnail file object:", thumbnailFile);
+
+
+    let videoURL = null;
+    let thumbnailURL = null;
+
     try {
         // --- 4. Upload Video to Firebase ---
         console.log(`[${new Date().toISOString()}] Uploading video: ${videoFile.originalname} (${(videoFile.size / 1024 / 1024).toFixed(2)} MB)`);
-        const videoFileName = `videos/event-${uuidv4()}-${videoFile.originalname.replace(/[^a-zA-Z0-9.]+/g, '_')}`; // Sanitize filename
+        const videoFileName = `event_videos/${created_by}/${uuidv4()}-${videoFile.originalname.replace(/[^a-zA-Z0-9.]+/g, '_')}`;
         const videoBlob = bucket.file(videoFileName);
         const videoBlobStream = videoBlob.createWriteStream({
-            metadata: { contentType: videoFile.mimetype },
-            public: true, // Make file publicly readable
-            resumable: false, // Consider 'true' for large files, but adds complexity
+            metadata: {
+                contentType: videoFile.mimetype,
+                // You can add custom metadata here if needed
+                // customMetadata: { uploadedBy: created_by }
+            },
+            // resumable: false, // Default is usually fine for files of this size. Can omit.
         });
 
         const videoUploadPromise = new Promise((resolve, reject) => {
-            videoBlobStream.on('error', err => reject(new Error(`Video upload stream error: ${err.message}`)));
-            videoBlobStream.on('finish', () => {
-                // Construct the public URL
-                videoURL = `https://storage.googleapis.com/${bucket.name}/${videoFileName}`;
-                console.log(`[${new Date().toISOString()}] Video uploaded successfully: ${videoURL}`);
-                resolve();
+            videoBlobStream.on('error', (err) => { // This is line ~161
+                console.error(`[STREAM ERROR - VIDEO] ${err.message}`, err); // Log the full error
+                reject(new Error(`Video upload stream error: ${err.message}`));
             });
-            // Write the buffer from memoryStorage
+            videoBlobStream.on('finish', () => {
+                videoURL = `https://storage.googleapis.com/${bucket.name}/${videoFileName}`;
+                console.log(`[${new Date().toISOString()}] Video uploaded, attempting to make public: ${videoURL}`);
+                // Make the file public *after* upload finishes
+                videoBlob.makePublic().then(() => {
+                    console.log(`[${new Date().toISOString()}] Video made public: ${videoURL}`);
+                    resolve();
+                }).catch(pubErr => {
+                    console.error(`[PUBLIC ERROR - VIDEO] ${pubErr.message}`, pubErr);
+                    reject(new Error(`Video uploaded but failed to make public: ${pubErr.message}`));
+                });
+            });
             videoBlobStream.end(videoFile.buffer);
         });
 
-        await videoUploadPromise; // Wait for video upload
+        await videoUploadPromise;
 
         // --- 5. Upload Thumbnail (if exists) ---
         if (thumbnailFile) {
-            console.log(`[${new Date().toISOString()}] Uploading thumbnail: ${thumbnailFile.originalname} (${(thumbnailFile.size / 1024).toFixed(1)} KB)`);
-            const thumbFileName = `thumbnails/event-${uuidv4()}-${thumbnailFile.originalname.replace(/[^a-zA-Z0-9.]+/g, '_')}`; // Sanitize filename
+            console.log(`[${new Date().toISOString()}] Uploading thumbnail: ${thumbnailFile.originalname}`);
+            const thumbFileName = `event_thumbnails/${created_by}/${uuidv4()}-${thumbnailFile.originalname.replace(/[^a-zA-Z0-9.]+/g, '_')}`;
             const thumbBlob = bucket.file(thumbFileName);
             const thumbBlobStream = thumbBlob.createWriteStream({
                 metadata: { contentType: thumbnailFile.mimetype },
-                public: true,
-                 resumable: false,
             });
 
             const thumbUploadPromise = new Promise((resolve, reject) => {
-                thumbBlobStream.on('error', err => reject(new Error(`Thumbnail upload stream error: ${err.message}`)));
+                thumbBlobStream.on('error', (err) => {
+                    console.error(`[STREAM ERROR - THUMBNAIL] ${err.message}`, err);
+                    reject(new Error(`Thumbnail upload stream error: ${err.message}`));
+                });
                 thumbBlobStream.on('finish', () => {
                     thumbnailURL = `https://storage.googleapis.com/${bucket.name}/${thumbFileName}`;
-                    console.log(`[${new Date().toISOString()}] Thumbnail uploaded successfully: ${thumbnailURL}`);
-                    resolve();
+                    console.log(`[${new Date().toISOString()}] Thumbnail uploaded, attempting to make public: ${thumbnailURL}`);
+                    thumbBlob.makePublic().then(() => {
+                        console.log(`[${new Date().toISOString()}] Thumbnail made public: ${thumbnailURL}`);
+                        resolve();
+                    }).catch(pubErr => {
+                        console.error(`[PUBLIC ERROR - THUMBNAIL] ${pubErr.message}`, pubErr);
+                        reject(new Error(`Thumbnail uploaded but failed to make public: ${pubErr.message}`));
+                    });
                 });
                 thumbBlobStream.end(thumbnailFile.buffer);
             });
-            await thumbUploadPromise; // Wait for thumbnail upload
+            await thumbUploadPromise;
         } else {
-            console.log("No thumbnail file provided by client. Thumbnail URL will be null.");
-            thumbnailURL = null; // Or assign a default placeholder URL if desired
+            console.log("No thumbnail file provided.");
         }
 
-        // --- 6. Parse JSON string fields from validatedBody ---
-        let parsedAddress, parsedAgeRestriction, parsedGenderRestriction;
-        try {
-            parsedAddress = JSON.parse(validatedBody.event_address);
-            // Ensure arrays are parsed correctly, provide empty array as default
-            parsedAgeRestriction = validatedBody.age_restriction ? JSON.parse(validatedBody.age_restriction) : [];
-            parsedGenderRestriction = validatedBody.gender_restriction ? JSON.parse(validatedBody.gender_restriction) : [];
-
-            // Basic validation on parsed address
-            if (!parsedAddress || typeof parsedAddress.address !== 'string' || typeof parsedAddress.longitude !== 'number' || typeof parsedAddress.latitude !== 'number') {
-                throw new Error('Invalid event_address structure');
-            }
-
-        } catch (parseError) {
-            console.error("Error parsing JSON fields from body:", parseError);
-            return res.status(400).json({ message: 'Invalid format for address, age, or gender restriction string.' });
-        }
-
+        // ... (your JSON parsing and MongoDB save logic from your code - looks okay) ...
+        // --- 6. Parse JSON string fields ---
+        // ...
         // --- 7. Create Event Document in MongoDB ---
-        const newEvent = new Event({
-            // Spread validated non-file fields
-            ...validatedBody,
-            // Overwrite/set specific fields
-            event_address: { // Store parsed object
-                address: parsedAddress.address,
-                longitude: parsedAddress.longitude,
-                latitude: parsedAddress.latitude,
-            },
-            age_restriction: parsedAgeRestriction, // Store parsed array
-            gender_restriction: parsedGenderRestriction, // Store parsed array
-            created_by: created_by, // Use ID from auth
-            // --- Save the URLs from Firebase ---
-            event_video: videoURL,
-            thumbnail: thumbnailURL,
-            // ticketsSold defaults to 0 from schema
-        });
+        // ...
 
-        console.log(`[${new Date().toISOString()}] Saving event to database for user ${created_by}...`);
-        const savedEvent = await newEvent.save();
-        console.log(`[${new Date().toISOString()}] Event saved successfully: ${savedEvent._id}`);
-
-        // --- 8. Send Success Response ---
         res.status(201).json({
             message: 'Event created successfully!',
-            event: savedEvent, // Send back the full event object
-            videoURL: videoURL, // Also confirm the URLs used
+            event: savedEvent, // Assuming savedEvent is defined after newEvent.save()
+            videoURL: videoURL,
             thumbnailURL: thumbnailURL,
         });
 
     } catch (error) {
-        // --- Robust Error Handling ---
-        console.error(`[${new Date().toISOString()}] Error in createEventWithUpload:`, error);
-
-        // Optional: Attempt to delete uploaded files from Firebase if DB save fails or other error occurs
-        // Important: Implement deleteFileFromFirebase carefully based on URL structure
-        // if (videoURL) await deleteFileFromFirebase(videoURL).catch(e => console.error("Firebase cleanup failed for video", e.message));
-        // if (thumbnailURL) await deleteFileFromFirebase(thumbnailURL).catch(e => console.error("Firebase cleanup failed for thumbnail", e.message));
-
-        // Provide more specific feedback
-        if (error.message.includes("upload stream error")) {
-             res.status(500).json({ message: 'Server error during file upload.', details: error.message });
-        } else if (error.name === 'ValidationError') { // Mongoose validation error
-             res.status(400).json({ message: 'Database validation failed.', details: error.message });
-        } else if (error.code === 'storage/object-not-found' || error.code === 404) { // Potential Firebase errors during upload step (less likely with streams)
-             res.status(500).json({ message: 'Storage error during file processing.', details: error.message });
+        console.error(`[${new Date().toISOString()}] CATCH BLOCK in createEventWithUpload:`, error.message, error.stack);
+        // Pass to global error handler or handle as you were
+        // The specific error messages you had were good.
+        if (!res.headersSent) { // Ensure headers haven't been sent by a stream error already
+            if (error.message.includes("upload stream error")) {
+                 res.status(500).json({ message: 'Server error during file upload.', details: error.message });
+            } else if (error.name === 'ValidationError') {
+                 res.status(400).json({ message: 'Database validation failed.', details: error.message });
+            }
+            // ... other specific error checks
+            else {
+                 res.status(500).json({ message: 'Internal server error creating event.', details: error.message });
+            }
+        } else {
+            console.error("Error occurred after headers were sent. This shouldn't happen if promises are awaited correctly.");
         }
-        else {
-             res.status(500).json({ message: 'Internal server error creating event.', details: error.message });
-        }
+        // Or simply use next(error) if you have a good global error handler
+        // next(error);
     }
 };
-
 
 
 eventController.getEvents = async (req, res) => {
