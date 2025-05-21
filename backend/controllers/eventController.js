@@ -818,23 +818,23 @@ exports.bookEvent = async (req, res) => {
             }
         }
 
-        console.log('Paid event detected. Converting amount to kobo...');
-        const amountInKobo = event.ticket_price;
-        console.log('Amount in kobo:', amountInKobo);
+        console.log('Paid event detected. Using ticket price...');
+        const amount = event.ticket_price;
+        console.log('Amount:', amount);
 
-        if (amountInKobo <= 0) {
-            console.log('Invalid ticket price:', amountInKobo);
+        if (amount <= 0) {
+            console.log('Invalid ticket price:', amount);
             return res.status(400).json({ message: "Ticket price must be greater than zero to initiate payment." });
         }
 
         console.log('Initializing payment with Paystack...');
         console.log('Payment details:', {
-            amount: amountInKobo,
+            amount: amount,
             email: user.email,
             callbackUrl: callbackUrl
         });
 
-        const paymentData = await initializePayment(amountInKobo, user.email, callbackUrl);
+        const paymentData = await initializePayment(amount, user.email, callbackUrl);
         console.log('Paystack response:', paymentData);
 
         if (!paymentData || !paymentData.status || !paymentData.data || !paymentData.data.authorization_url || !paymentData.data.reference) {

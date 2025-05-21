@@ -15,6 +15,33 @@ const Paystack = require('paystack-node');
  * @property {string|number} [amount] - Optional amount for mock payments
  */
 
+// Wrapper functions for direct import in controllers
+/**
+ * Initialize a payment with Paystack
+ * @param {number} amount - Amount in kobo (smallest currency unit)
+ * @param {string} email - Customer's email address
+ * @param {string} callbackUrl - URL to redirect to after payment
+ * @returns {Promise<Object>} - Paystack API response
+ */
+exports.initializePayment = async (amount, email, callbackUrl) => {
+    const paystackService = new PaystackService();
+    return paystackService.initializeTransaction({
+        amount,
+        email,
+        callback_url: callbackUrl
+    });
+};
+
+/**
+ * Verify a payment with Paystack
+ * @param {string} reference - Payment reference
+ * @returns {Promise<Object>} - Paystack API response
+ */
+exports.verifyPayment = async (reference) => {
+    const paystackService = new PaystackService();
+    return paystackService.verifyPayment({ reference });
+};
+
 class PaystackService {
     constructor() {
         this.paystack = null;
