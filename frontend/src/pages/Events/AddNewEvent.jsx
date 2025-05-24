@@ -17,40 +17,7 @@ import PlacesAutocomplete, {
 import { FiMapPin } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
-// --- Thumbnail Generation Configuration ---
-const generateThumbnailFromVideo = (videoFile) => {
-    return new Promise((resolve, reject) => {
-        if (!videoFile?.type.startsWith('video/')) {
-            return reject(new Error('Please select a valid video file'));
-        }
-        const video = document.createElement('video');
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const videoUrl = URL.createObjectURL(videoFile);
-        video.src = videoUrl;
-        video.muted = true;
-        video.onloadedmetadata = () => {
-            const thumbnailTime = video.duration * 0.1;
-            canvas.width = 320;
-            canvas.height = (320 / video.videoWidth) * video.videoHeight;
-            video.currentTime = thumbnailTime;
-        };
-        video.onseeked = () => {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob(blob => {
-                if (!blob) return reject(new Error('Failed to create thumbnail blob'));
-                const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
-                const previewUrl = URL.createObjectURL(blob);
-                URL.revokeObjectURL(videoUrl);
-                resolve({ file: thumbnailFile, previewUrl });
-            }, 'image/jpeg', 0.8);
-        };
-        video.onerror = () => {
-            URL.revokeObjectURL(videoUrl);
-            reject(new Error('Error processing video for thumbnail'));
-        };
-    });
-};
+// Thumbnail generation has been removed to require manual thumbnail selection
 
 export default function AddNewEvent() {
     const [videoUploadProgress, setVideoUploadProgress] = useState(0);
@@ -58,8 +25,6 @@ export default function AddNewEvent() {
     const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
     const navigate = useNavigate();
     const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState(null);
-    const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
-    const [isManualThumbnail, setIsManualThumbnail] = useState(false); // NEW: Tracks if current thumbnail is manually uploaded
 
     const { user } = useAuth();
     const plyrRef = useRef(null);
@@ -70,33 +35,7 @@ export default function AddNewEvent() {
         }
     }, [thumbnailPreviewUrl]);
 
-    const triggerVideoThumbnailGeneration = async (videoFile) => {
-        if (!videoFile) return;
-
-        setIsGeneratingThumbnail(true);
-        formik.setFieldValue("thumbnail_file", null); // Clear previous
-        setThumbnailPreviewUrl(null); // Clear preview
-
-        // Mark thumbnail_file as touched to trigger validation
-        formik.setFieldTouched("thumbnail_file", true);
-
-        try {
-            const result = await generateThumbnailFromVideo(videoFile);
-            if (result) {
-                formik.setFieldValue("thumbnail_file", result.file);
-                setThumbnailPreviewUrl(result.previewUrl);
-                setIsManualThumbnail(false); // Mark as auto-generated
-                toast.success("Thumbnail generated from video.");
-            }
-        } catch (error) {
-            console.error("Thumbnail generation failed:", error);
-            toast.error(`Failed to generate thumbnail: ${error.message}`);
-            formik.setFieldValue("thumbnail_file", null);
-            setThumbnailPreviewUrl(null);
-        } finally {
-            setIsGeneratingThumbnail(false);
-        }
-    };
+    // Thumbnail generation functionality has been removed
 
     const handleVideoChange = async (event) => {
         const videoFile = event.currentTarget.files[0];
@@ -106,18 +45,9 @@ export default function AddNewEvent() {
         // Mark thumbnail_file as touched to trigger validation
         formik.setFieldTouched("thumbnail_file", true);
 
-        if (videoFile) {
-            if (!isManualThumbnail) { // Only generate if no manual thumbnail is active
-                await triggerVideoThumbnailGeneration(videoFile);
-            } else {
-                console.log("Manual thumbnail is active, not generating from new video.");
-            }
-        } else {
-            // Video deselected
-            if (!isManualThumbnail) {
-                formik.setFieldValue("thumbnail_file", null);
-                setThumbnailPreviewUrl(null);
-            }
+        // Remind user to upload a thumbnail if they haven't already
+        if (videoFile && !formik.values.thumbnail_file) {
+            toast.info("Please don't forget to upload a thumbnail for your event.");
         }
     };
 
@@ -138,43 +68,18 @@ export default function AddNewEvent() {
             formik.setFieldValue("thumbnail_file", manualFile);
             const previewUrl = URL.createObjectURL(manualFile);
             setThumbnailPreviewUrl(previewUrl);
-            setIsManualThumbnail(true);
-            toast.success("Custom thumbnail uploaded.");
+            toast.success("Thumbnail uploaded successfully.");
         } else {
             // Manual thumbnail input cleared by user (e.g., selected a file then cancelled)
             formik.setFieldValue("thumbnail_file", null);
             setThumbnailPreviewUrl(null);
-            setIsManualThumbnail(false);
             if (manualThumbnailInput) manualThumbnailInput.value = ""; // Ensure input is visually cleared
 
-            // If a video exists, generate a thumbnail for it now
-            if (formik.values.event_video) {
-                toast.info("Custom thumbnail removed. Attempting to generate from video.");
-                await triggerVideoThumbnailGeneration(formik.values.event_video);
-            }
+            toast.info("Thumbnail removed. Please upload a new thumbnail.");
         }
     };
 
-    const handleRemoveCustomThumbnail = async () => {
-        formik.setFieldValue("thumbnail_file", null);
-        setThumbnailPreviewUrl(null);
-        setIsManualThumbnail(false);
-
-        // Mark thumbnail_file as touched to trigger validation
-        formik.setFieldTouched("thumbnail_file", true);
-
-        const manualThumbnailInput = document.getElementById('manual_thumbnail');
-        if (manualThumbnailInput) {
-            manualThumbnailInput.value = ""; // Reset the file input
-        }
-
-        if (formik.values.event_video) {
-            toast.info("Custom thumbnail removed. Generating new thumbnail from video.");
-            await triggerVideoThumbnailGeneration(formik.values.event_video);
-        } else {
-            toast.info("Custom thumbnail removed.");
-        }
-    };
+    // The handleRemoveCustomThumbnail function has been removed as we now require manual thumbnail upload
 
 
     const formik = useFormik({
@@ -215,12 +120,8 @@ export default function AddNewEvent() {
                 }),
             thumbnail_file: Yup.mixed()
                 .required("Thumbnail is required")
-                .test("fileTypeImage", "Custom thumbnail must be an image", function(value) {
-                    // Only validate if it's a manual thumbnail and a file exists
-                    if (this.parent.isManualThumbnail && value) { // 'isManualThumbnail' not directly in yup context, this might need adjustment or be handled outside
-                        return value && value.type && value.type.startsWith("image/");
-                    }
-                    return true; // Pass if not manual or no file
+                .test("fileTypeImage", "Thumbnail must be an image (JPG, PNG, WEBP)", function(value) {
+                    return value && value.type && value.type.startsWith("image/");
                 }),
             // age_restriction: Yup.array(), // Add specific validation if needed
             // gender_restriction: Yup.array(), // Add specific validation if needed
@@ -298,8 +199,6 @@ export default function AddNewEvent() {
                 setAddress('');
                 setCoordinates({ lat: null, lng: null });
                 setVideoUploadProgress(0);
-                setIsManualThumbnail(false); // Reset manual thumbnail flag
-                setIsGeneratingThumbnail(false);
 
                 // Clear file input fields visually
                 const videoInput = document.getElementById('event_video');
@@ -346,8 +245,6 @@ export default function AddNewEvent() {
         setThumbnailPreviewUrl(null);
         setAddress("");
         setCoordinates({ lat: null, lng: null });
-        setIsManualThumbnail(false); // Reset manual thumbnail flag
-        setIsGeneratingThumbnail(false);
 
         // Clear file input fields visually
         const videoInput = document.getElementById('event_video');
@@ -535,7 +432,7 @@ export default function AddNewEvent() {
                                         onChange={handleManualThumbnailChange}
                                     />
                                     <p className="text-xs text-gray-600">
-                                        Required (JPG, PNG, WEBP). You can upload your own or one will be generated from the video.
+                                        Required (JPG, PNG, WEBP). You must upload a thumbnail for your event.
                                     </p>
                                     {/* Error for thumbnail_file shown for all validation errors */}
                                     {formik.touched.thumbnail_file && formik.errors.thumbnail_file ? (
@@ -543,35 +440,20 @@ export default function AddNewEvent() {
                                     ) : null}
                                 </div>
 
-                                {isGeneratingThumbnail && (
-                                    <p className="text-sm text-indigo-600 mt-4">Generating thumbnail from video...</p>
-                                )}
-                                {thumbnailPreviewUrl && !isGeneratingThumbnail && (
+                                {thumbnailPreviewUrl && (
                                     <div className="mt-4">
                                         <p className="text-sm font-medium text-gray-700 mb-1">
-                                            {isManualThumbnail ? "Custom Thumbnail Preview:" : "Generated Thumbnail Preview:"}
+                                            Thumbnail Preview:
                                         </p>
                                         <img
                                             src={thumbnailPreviewUrl}
                                             alt="Thumbnail preview"
                                             className="max-w-xs w-full max-h-48 rounded border border-gray-300 object-contain bg-gray-100"
                                         />
-                                        {isManualThumbnail && (
-                                            <button
-                                                type="button"
-                                                onClick={handleRemoveCustomThumbnail}
-                                                className="mt-2 text-xs text-red-600 hover:text-red-800 font-medium"
-                                            >
-                                                Remove Custom & Use Generated
-                                            </button>
-                                        )}
                                     </div>
                                 )}
-                                {!thumbnailPreviewUrl && !isGeneratingThumbnail && formik.values.event_video && !isManualThumbnail && (
-                                    <p className="mt-4 text-sm text-gray-500">A thumbnail will be generated from the video once selected.</p>
-                                )}
-                                {!thumbnailPreviewUrl && !isGeneratingThumbnail && !formik.values.event_video && (
-                                    <p className="mt-4 text-sm text-gray-500">Upload a video to generate a thumbnail or upload a custom one.</p>
+                                {!thumbnailPreviewUrl && (
+                                    <p className="mt-4 text-sm text-gray-500">Please upload a thumbnail for your event.</p>
                                 )}
                             </div>
                         </div>
@@ -618,8 +500,8 @@ export default function AddNewEvent() {
                     {/* Action Buttons */}
                     <div className="mt-6 flex items-center justify-end gap-x-6">
                         <button type="button" onClick={handleCancel} className="text-sm font-semibold leading-6 text-gray-900">Cancel</button>
-                        <button type="submit" disabled={formik.isSubmitting || isGeneratingThumbnail} className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50">
-                            {formik.isSubmitting ? "Saving..." : (isGeneratingThumbnail ? "Processing Media..." : "Save Event")}
+                        <button type="submit" disabled={formik.isSubmitting} className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50">
+                            {formik.isSubmitting ? "Saving..." : "Save Event"}
                         </button>
                     </div>
                 </form>

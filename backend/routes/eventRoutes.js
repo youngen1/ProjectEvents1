@@ -16,7 +16,7 @@ router.post(
         { name: 'event_video', maxCount: 1 },
         { name: 'thumbnail_file', maxCount: 1 }
     ]),
-    // Middleware to check Firebase initialization before controller
+    
     (req, res, next) => {
         console.log('--- ENTERING /api/events/create Pre-Controller Check ---');
         console.log('Global Firebase Initialized Flag:', global.firebaseAdminInitialized);
@@ -33,11 +33,11 @@ router.post(
             });
         }
 
-        // Try to access storage bucket to be absolutely sure
+        
         try {
             const bucketName = admin.storage().bucket().name;
             console.log('Firebase Storage bucket check successful in route. Bucket name:', bucketName);
-            next(); // Proceed to eventController.createEventWithUpload
+            next();
         } catch (storageAccessError) {
             console.error('CRITICAL PRE-STORAGE CHECK: Failed to access Firebase Storage bucket in route.', storageAccessError.message);
             return res.status(500).json({
