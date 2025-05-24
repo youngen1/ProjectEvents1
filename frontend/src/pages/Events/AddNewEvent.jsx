@@ -115,8 +115,9 @@ export default function AddNewEvent() {
             event_max_capacity: Yup.number().required("Event max capacity is required").integer("Must be a whole number").min(1, "Capacity must be at least 1"),
             event_video: Yup.mixed()
                 .required("Event video is required")
-                .test("fileType", "Unsupported video format", (value) => {
-                    return value && value.type && value.type.startsWith("video/");
+                .test("fileType", "Unsupported video format. Please use MP4, WebM, or OGG format.", (value) => {
+                    const supportedFormats = ['video/mp4', 'video/webm', 'video/ogg'];
+                    return value && value.type && supportedFormats.includes(value.type);
                 }),
             thumbnail_file: Yup.mixed()
                 .required("Thumbnail is required")
@@ -210,7 +211,16 @@ export default function AddNewEvent() {
 
             } catch (error) {
                 console.error("Error creating event:", error);
-                toast.error(error.response?.data?.message || "An error occurred during event creation.");
+
+                // Check for specific error about unsupported video format
+                if (error.response?.data?.message === 'Unsupported video format.') {
+                    toast.error(`${error.response.data.message} ${error.response.data.details || 'Please use MP4, WebM, or OGG format.'}`);
+                } else if (error.response?.data?.details?.includes('Video upload stream error')) {
+                    toast.error("Video format not supported. Please use MP4, WebM, or OGG format.");
+                } else {
+                    toast.error(error.response?.data?.message || "An error occurred during event creation.");
+                }
+
                 setVideoUploadProgress(0);
             } finally {
                 setSubmitting(false);
@@ -399,9 +409,9 @@ export default function AddNewEvent() {
                                     <div className="text-center">
                                         <label htmlFor="event_video" className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
                                             <span>{formik.values.event_video ? "Change video" : "Upload a video"}</span>
-                                            <input id="event_video" name="event_video" type="file" className="sr-only" accept="video/*" onChange={handleVideoChange} />
+                                            <input id="event_video" name="event_video" type="file" className="sr-only" accept="video/mp4,video/webm,video/ogg" onChange={handleVideoChange} />
                                         </label>
-                                        <p className="pl-1 text-xs leading-5 text-gray-600">{formik.values.event_video ? formik.values.event_video.name : "MP4, AVI, MOV up to 500MB"}</p>
+                                        <p className="pl-1 text-xs leading-5 text-gray-600">{formik.values.event_video ? formik.values.event_video.name : "MP4, WebM, OGG formats only (up to 500MB)"}</p>
                                         {formik.touched.event_video && formik.errors.event_video ? (
                                             <div className="text-red-500 text-xs mt-1">{formik.errors.event_video}</div>
                                         ) : null}
@@ -412,7 +422,7 @@ export default function AddNewEvent() {
                                         </div>
                                     )}
                                     {videoUploadProgress === 100 && (
-                                        <p className="text-sm text-green-600 mt-2">Video upload processing with form submission.</p>
+                                        <p className="text-sm text-green-600 mt-2"></p>
                                     )}
                                 </div>
                             </div>

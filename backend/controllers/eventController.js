@@ -128,6 +128,16 @@ eventController.createEventWithUpload = async (req, res, next) => { // Added nex
     if (!videoFile) {
         return res.status(400).json({ message: 'Event video file is required.' });
     }
+
+    // Check for supported video formats
+    const supportedVideoFormats = ['video/mp4', 'video/webm', 'video/ogg'];
+    if (!supportedVideoFormats.includes(videoFile.mimetype)) {
+        return res.status(400).json({ 
+            message: 'Unsupported video format.', 
+            details: 'Please upload a video in MP4, WebM, or OGG format.' 
+        });
+    }
+
     console.log("Video file object:", videoFile);
     if (thumbnailFile) console.log("Thumbnail file object:", thumbnailFile);
 
