@@ -179,7 +179,7 @@ export default function Login() {
 
       setLoading(true);
       try {
-        const response = await axiosInstance.post("/users/login", values);
+        const response = await axiosInstance.post("/users/login");
         const { token, user } = response.data;
 
         // Reset login attempts on successful login

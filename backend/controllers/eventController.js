@@ -102,8 +102,7 @@ const updateEventSchema = Joi.object({
     event_description: Joi.string(),
     event_duration: Joi.number().min(0.5),
     event_max_capacity: Joi.number().min(1).integer(),
-    // Note: Updating event_video/thumbnail via this route currently expects URLs.
-    // Handling file updates would require a separate mechanism or modification here.
+
     event_video: Joi.string().allow(''),
     thumbnail: Joi.string().allow(''),
     age_restriction: Joi.array().items(Joi.string()),
