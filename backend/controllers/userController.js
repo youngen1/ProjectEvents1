@@ -227,3 +227,344 @@ exports.getPlatformEarnings = async (req, res) => {
     res.status(500).json({ message: "Error fetching platform earnings", error: error.message });
   }
 };
+
+exports.updateUserProfile = async (req, res) => {
+  const userId = req.user.id;
+  const { fullname, dateOfBirth, phone_number, profile_picture, username } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (username) {
+      const existingUser = await User.findOne({ username, _id: { $ne: userId } });
+      if (existingUser) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return res.status(400).json({ message: "Username can only contain letters, numbers and underscores" });
+      }
+      user.username = username;
+    }
+
+    if (fullname) user.fullname = fullname;
+    if (dateOfBirth) user.dateOfBirth = dateOfBirth;
+    if (phone_number) user.phone_number = phone_number;
+    if (profile_picture) user.profile_picture = profile_picture;
+
+    await user.save();
+    res.status(200).json({ message: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.attachBankAccount = async (req, res) => {
+  const userId = req.user.id;
+  const { bank_account_number, bank_code } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.bank_account_number = bank_account_number;
+    user.bank_code = bank_code;
+    await user.save();
+
+    res.status(200).json({ message: "Bank account attached successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getMyTickets = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId).populate({
+      path: "my_tickets",
+      populate: {
+        path: "created_by",
+        select: "fullname username email profile_picture",
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user.my_tickets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.requestWithdrawal = async (req, res) => {
+  const userId = req.user.id;
+  const { card_number, card_expiry_month, card_expiry_year, card_cvv } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const amountToWithdraw = user.total_earnings * 100; // Converting to kobo
+    if (amountToWithdraw <= 5000) {
+      return res.status(400).json({
+        message: "Amount must be greater than NGN 50 to request a withdrawal",
+      });
+    }
+
+    const withdrawal = new Withdrawal({
+      user: userId,
+      amount: amountToWithdraw,
+      status: "pending"
+    });
+    await withdrawal.save();
+
+    const chargeResponse = await chargeCard(user.email, amountToWithdraw, {
+      card_number,
+      card_expiry_month,
+      card_expiry_year,
+      card_cvv,
+    });
+
+    if (chargeResponse.data.status !== "success") {
+      withdrawal.status = "failed";
+      await withdrawal.save();
+      return res.status(400).json({ message: "Failed to charge card" });
+    }
+
+    const authorization_code = chargeResponse.data.authorization.authorization_code;
+    const recipientData = await createTransferRecipient(authorization_code, user.fullname);
+    const recipient_code = recipientData.data.recipient_code;
+    const transferData = await initiateTransfer(amountToWithdraw, recipient_code);
+
+    if (transferData.status === "success") {
+      withdrawal.status = "completed";
+      await withdrawal.save();
+      user.total_earnings = 0;
+      await user.save();
+
+      res.status(200).json({
+        message: "Withdrawal request successful. Amount transferred to your card.",
+        amount: amountToWithdraw / 100,
+      });
+    } else {
+      withdrawal.status = "failed";
+      await withdrawal.save();
+      res.status(400).json({ message: "Transfer failed" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getWithdrawalHistory = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const withdrawals = await Withdrawal.find({ user: userId }).sort({ createdAt: -1 });
+    res.status(200).json(withdrawals);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.followUser = async (req, res) => {
+  const userId = req.user.id;
+  const { followId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    const followUser = await User.findById(followId);
+
+    if (!followUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.following.includes(followId)) {
+      await User.updateOne({ _id: userId }, { $addToSet: { following: followId } });
+    }
+
+    if (!followUser.followers.includes(userId)) {
+      await User.updateOne({ _id: followId }, { $addToSet: { followers: userId } });
+    }
+
+    res.status(200).json({ message: "User followed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.unfollowUser = async (req, res) => {
+  const userId = req.user.id;
+  const { followId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    const followUser = await User.findById(followId);
+
+    if (!followUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.following = user.following.filter(id => id.toString() !== followId);
+    await user.save();
+
+    followUser.followers = followUser.followers.filter(id => id.toString() !== userId);
+    await followUser.save();
+
+    res.status(200).json({ message: "User unfollowed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getUserById = async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    const user = await User.findById(userId)
+      .select("fullname username email profile_picture followers following my_tickets role total_earnings")
+      .populate({
+        path: "followers following",
+        select: "fullname username profile_picture role"
+      });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getFollowers = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findById(userId).populate({
+      path: "followers",
+      select: "fullname username email profile_picture followers following my_tickets role",
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user.followers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getFollowing = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findById(userId).populate({
+      path: "following",
+      select: "fullname username email profile_picture followers following my_tickets role",
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user.following);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
+    const resetLink = `${FRONTEND_URL}/reset-password/${token}`;
+
+    const transporter = nodemailer.createTransport({
+      host: EMAIL_HOST,
+      port: EMAIL_PORT,
+      secure: process.env.EMAIL_PORT === '465',
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASSWORD
+      }
+    });
+
+    await transporter.sendMail({
+      from: EMAIL_USER,
+      to: email,
+      subject: "Password Reset Request",
+      html: `<p>Click the link below to reset your password:</p>
+             <a href="${resetLink}">Reset Password</a>
+             <p>This link will expire in 1 hour.</p>`,
+    });
+
+    res.status(200).json({ message: "Password reset email sent" });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending password reset email" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Invalid token or user not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(400).json({ message: "Invalid or expired token" });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully! You can now log in." });
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred during email verification" });
+  }
+};
+
