@@ -204,8 +204,9 @@ exports.loginUser = async (req, res) => {
         host: EMAIL_HOST,
         port: EMAIL_PORT,
         auth: {
-          user: 'truecirclevents@gmail.com',
-          pass: 'erugjdsslvbyxiki'
+          user: EMAIL_USER,
+          pass: EMAIL_PASSWORD
+
         }
       });
       console.log('Transporter created with host:', EMAIL_HOST);
