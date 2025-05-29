@@ -7,7 +7,6 @@ import { toast, Toaster } from "sonner";
 import Footer from "../../components/Footer";
 import Logo from "../../components/Logo";
 import axiosInstance from "../../utils/axiosInstance";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 // Memoize the validation schema
 const validationSchema = Yup.object({
@@ -179,7 +178,7 @@ export default function Login() {
 
       setLoading(true);
       try {
-        const response = await axiosInstance.post("/users/login");
+        const response = await axiosInstance.post("/users/login", values);
         const { token, user } = response.data;
 
         // Reset login attempts on successful login

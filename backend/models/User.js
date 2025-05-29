@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
         lowercase: true, // Convert email to lowercase
         trim: true,
         match: [
-            /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, // Better regex
+            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, // Better regex
             "Please fill a valid email address",
         ],
     },
@@ -30,9 +30,9 @@ const userSchema = new mongoose.Schema({
         enum: ["user", "admin"],
         default: "user"
     },
-    bank_account_number: { type: String },
-    bank_code: { type: String },            
-    total_earnings: { type: Number, default: 0 }, 
+    total_earnings: { type: Number, default: 0 }, // Initialize to 0
+    bank_account_number: { type: String }, // Encrypt this!
+    bank_code: { type: String },            // Encrypt this!
     my_tickets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
     isVerified: { type: Boolean, default: false },
     gender: {

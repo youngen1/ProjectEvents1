@@ -1,11 +1,13 @@
 import React, { memo, useEffect, useRef, useState } from "react";
+import moment from "moment";
 import { IoShareSocialOutline } from "react-icons/io5";
+
 import Plyr from "plyr-react";
 import "plyr-react/plyr.css";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom"; // Make sure useNavigate is imported
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useInView } from "react-intersection-observer";
+import { useInView } from "react-intersection-observer"; // Import hook
 
 const videoOptions = {
     controls: [
@@ -18,267 +20,222 @@ const videoOptions = {
         "fullscreen",
     ],
     fullscreen: {
-        enabled: true,
+        enabled: false,
         fallback: true,
         iosNative: true,
     },
-    clickToPlay: false,
+    clickToPlay: true,
     ratio: "16:9",
-    autoplay: false,
+    previewThumbnails: { enabled: false }, 
 };
 
 const EventCard = ({
-                       _id,
-                       event_title,
-                       event_description,
-                       created_by,
-                       event_video,
-                       thumbnail,
-                       event_date_and_time,
-                       event_address,
-                       ticket_price,
-                       // ... other props
-                       handleFetchJoinedMembers,
-                       handleEventClick,
-                       handleShare,
-                       booked_tickets,
-                   }) => {
-    const navigate = useNavigate(); // Initialize useNavigate
+    _id,
+    event_title,
+    event_description,
+    created_by,
+    event_video,
+    thumbnail,
+    category,
+    ticket_price,
+    event_date_and_time,
+    event_duration,
+    event_address,
+    booked_tickets,
+    handleFetchJoinedMembers,
+    handleEventClick,
+    handleShare,
+}) => {
+    const navigate = useNavigate();
     const { user } = useAuth();
 
-    const { ref: cardVisibilityRef, inView: isInView } = useInView({
-        threshold: 0.1,
-        triggerOnce: false,
-    });
-    const plyrInstanceRef = useRef(null);
+    const { ref: videoRef, inView: isInView } = useInView({ threshold: 0.1 }); // Detect when in view (reduced threshold)
 
-    const [showVideo, setShowVideo] = useState(false);
+    const playerRef = useRef(null);
+    const [player, setPlayer] = useState(null);
+    const [showVideo, setShowVideo] = useState(false); // State to control video display
     const [videoError, setVideoError] = useState(false);
 
-    // ... (useEffect hooks and handlers remain largely the same)
-    useEffect(() => {
-        const player = plyrInstanceRef.current;
-        if (player && showVideo && !videoError) {
-            if (isInView) {
-                if (player.paused) {
-                    player.play().catch(error => {
-                        if (error.name === 'NotAllowedError') {
-                            console.warn(`[${event_title}] Autoplay was prevented.`);
-                        } else {
-                            console.error(`[${event_title}] Error attempting to play video:`, error);
-                        }
-                    });
-                }
-            } else {
-                if (!player.paused && player.playing) {
-                    player.pause();
-                }
-            }
-        }
-    }, [isInView, showVideo, videoError, event_title]);
 
     useEffect(() => {
+        if (isInView && playerRef.current && !player) {
+            setPlayer(playerRef.current.plyr);
+        }
+
         return () => {
-            if (plyrInstanceRef.current) {
-                try {
-                    plyrInstanceRef.current.destroy();
-                } catch (e) {
-                    console.error(`[${event_title}] Error during unmount Plyr destroy:`, e);
-                }
-                plyrInstanceRef.current = null;
+            if (player) {
+                player.destroy(); // Destroy on unmount or when out of view
+                setPlayer(null); // Clear player instance
             }
         };
-    }, [event_title]);
+    }, [isInView, player]);
 
-    const handlePlayerReady = (player) => {
-        if (player) {
-            plyrInstanceRef.current = player;
-            player.on('ended', () => {
-                setShowVideo(false);
-            });
-            player.on('error', (event) => {
-                console.error(`[${event_title}] Plyr API instance 'error' event:`, event);
-                setVideoError(true);
-                setShowVideo(false);
-            });
-            if (showVideo && isInView && !videoError) {
-                player.play().catch(error => {
-                    if (error.name === 'NotAllowedError') {
-                        console.warn(`[${event_title}] Initial autoplay onReady was prevented.`);
-                    } else {
-                        console.error(`[${event_title}] Error attempting initial play onReady:`, error);
-                    }
-                });
-            }
-        }
-    };
 
     const handlePlayClick = () => {
-        if (event_video) {
-            if (plyrInstanceRef.current) {
-                try {
-                    plyrInstanceRef.current.destroy();
-                } catch (e) {
-                    console.error(`[${event_title}] Error destroying old instance:`, e);
-                }
-                plyrInstanceRef.current = null;
-            }
-            setShowVideo(true);
-            setVideoError(false);
+        if (player) {
+          setShowVideo(true); // Show the video player
+            player.play();    // Autoplay
         } else {
-            toast.error("No video available for this event.");
+          console.error("Plyr instance not available."); //Handle cases where player isn't ready.
         }
+
     };
 
     const handleImageError = () => {
-        console.error(`Error loading thumbnail for ${event_title}:`, thumbnail);
+        console.error("Error loading image:", thumbnail);
     };
 
-    const handlePlyrComponentError = (error) => {
-        console.error(`[${event_title}] Plyr Component onError Prop:`, error);
-        setVideoError(true);
-        setShowVideo(false);
-    };
-
-    const shouldRenderPlyr = showVideo && !videoError && event_video;
-
-    const handleAvatarClick = (e) => {
-        e.stopPropagation(); // Prevent triggering handleEventClick on the card below
-        if (created_by && created_by._id) {
-            console.log(`Navigating to profile: /profile/${created_by._id}`);
-            navigate(`/profile/${created_by._id}`); // Or your specific profile route
-        } else if (created_by && created_by.username) {
-            // Fallback or alternative if ID is not primary identifier for profile route
-            console.log(`Navigating to profile: /profile/${created_by.username}`);
-            navigate(`/profile/${created_by.username}`);
-        } else {
-            console.warn("Cannot navigate to profile: created_by._id or created_by.username is missing.");
-        }
-    };
-
+    const handleVideoError = (e) => {
+      console.error("Error playing video:", e);
+      setVideoError(true);
+      setShowVideo(false); // Hide video player on error, show thumbnail instead
+    }
 
     return (
-        <div className="mb-8" ref={cardVisibilityRef}> {/* Added mb-8 for spacing if avatars overlap next card, adjust as needed */}
-            {/* New Relative Wrapper for Card and Avatar */}
-            <div className="relative">
-                {/* User Profile Avatar - Positioned absolutely relative to the new wrapper */}
-                {created_by && (
-                    <div
-                        onClick={handleAvatarClick}
-                        className="absolute top-0 right-0 z-20 cursor-pointer
-                                   transform translate-x-1/3 -translate-y-1/3  /* Adjust these for precise 'outside' positioning */
-                                   hover:scale-110 transition-transform"
-                        title={`View ${created_by.username || 'creator'}'s profile`}
-                    >
-                        {created_by.profile_picture ? (
-                            <img
-                                src={created_by.profile_picture}
-                                alt={`${created_by.username || 'Creator'}'s profile`}
-                                className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-lg"
-                            />
-                        ) : (
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-semibold border-2 border-white shadow-lg">
-                                {created_by.username ? created_by.username.charAt(0).toUpperCase() : 'U'}
-                            </div>
-                        )}
+        <div className="relative" ref={videoRef}>
+            <div
+                className="absolute -top-5 -right-2 z-[1000] cursor-pointer"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (user) {
+                        navigate(`/user-profile/${created_by?._id}`);
+                    } else {
+                        toast.error("Please login to view user profile");
+                        navigate("/login");
+                    }
+                }}
+            >
+                {created_by?.profile_picture ? (
+                    <img
+                        src={created_by?.profile_picture}
+                        alt="profile"
+                        loading="lazy"
+                        className="w-12 h-12 rounded-full bg-gray-100 object-cover object-center"
+                    />
+                ) : (
+                    <div className="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">
+                        {created_by?.fullname?.charAt(0)?.toUpperCase()}
                     </div>
                 )}
+            </div>
 
-                {/* Event Card Content Box */}
-                {/* Added z-10 so it's below the avatar if they were to perfectly overlap */}
-                <div className="bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105 z-10">
-                    <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden bg-black">
-                        {!shouldRenderPlyr && (
-                            thumbnail ? (
-                                <img
-                                    src={thumbnail}
-                                    alt={event_title + " Thumbnail"}
-                                    className="w-full h-full object-cover object-center cursor-pointer"
-                                    onClick={handlePlayClick}
-                                    onError={handleImageError}
-                                    loading="lazy"
-                                />
-                            ) : (
-                                <div
-                                    className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 cursor-pointer"
-                                    onClick={handlePlayClick}
-                                >
-                                    {event_video ? "Play Video" : "No Preview Available"}
-                                </div>
-                            )
-                        )}
+            <div className="bg-white shadow rounded-lg overflow-hidden transition-transform transform hover:scale-105">
 
-                        {shouldRenderPlyr && (
-                            <Plyr
-                                key={event_video}
-                                source={{
-                                    type: "video",
-                                    sources: [{ src: event_video, provider: 'html5', type: "video/mp4" }],
-                                }}
-                                options={{ ...videoOptions }}
-                                onReady={handlePlayerReady}
-                                onError={handlePlyrComponentError}
-                            />
-                        )}
-
-                        {videoError && showVideo && !shouldRenderPlyr && (
-                            <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center text-red-500 p-4 text-center">
-                                <p>Video for "{event_title}" could not be loaded.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div onClick={() => handleEventClick(_id)} className="p-4 cursor-pointer">
-                        <h3 className="text-lg font-semibold text-gray-800">{event_title}</h3>
-                        <p className="text-sm text-gray-600 truncate">{event_description}</p>
-
-                        {/* Date */}
-                        {event_date_and_time && (
-                            <div className="mt-2 flex items-center text-sm text-gray-500">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                {new Date(event_date_and_time).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </div>
-                        )}
-
-                        {/* Location */}
-                        {event_address && event_address.address && (
-                            <div className="mt-1 flex items-center text-sm text-gray-500">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                <span className="truncate">{event_address.address}</span>
-                            </div>
-                        )}
-
-                        {/* Price */}
-                        <div className="mt-1 flex items-center text-sm font-medium text-green-600">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            {ticket_price === 0 ? 'Free' : `R${ticket_price.toFixed(2)}`}
-                        </div>
-                    </div>
-
-                    <div className="p-4 border-t border-gray-200 flex justify-between items-center">
-                        <button
-                            onClick={() => handleFetchJoinedMembers && handleFetchJoinedMembers(_id)}
-                            className="text-xs text-blue-500 hover:underline"
-                        >
-                            {booked_tickets?.length || 0} Joined
-                        </button>
-                        <IoShareSocialOutline
-                            className="text-xl text-gray-500 hover:text-blue-500 cursor-pointer"
-                            onClick={() => handleShare && handleShare(_id, event_title)}
+              <div className="w-full h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden">
+                    {/* Show Thumbnail Initially */}
+                    {!showVideo && thumbnail && (
+                        <img
+                            src={thumbnail}
+                            alt={event_title + " Thumbnail"}
+                            className="w-full h-full object-cover object-center cursor-pointer"
+                            onClick={handlePlayClick}
+                            onError={handleImageError}
                         />
+                    )}
+
+                   {!showVideo && !thumbnail && (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                          No Thumbnail
+                        </div>
+                   )}
+
+                    {/* Show Video Player on Click (and if in view) */}
+                    {showVideo && isInView && (
+                        <Plyr
+                            ref={playerRef}
+                            source={{
+                                type: "video",
+                                sources: [{ src: event_video, type: "video/mp4" }],
+                            }}
+                            options={videoOptions}
+                            onError={handleVideoError} // Handle video errors
+                        />
+                    )}
+                    {videoError && (<div className="w-full h-full bg-red-200 flex items-center justify-center text-red-500">Error Loading Video.</div>)}
+                </div>
+
+                <div
+                    onClick={() => handleEventClick(_id)}
+                    className="p-4 cursor-pointer"
+                >
+                    <div className="flex justify-between items-center mb-2">
+                        <span
+                            className={`text-sm ${ticket_price === 0 ? "bg-green-500" : "bg-purple-500"
+                                } text-white px-2 py-1 rounded font-semibold`}
+                        >
+                            {ticket_price === 0 ? "Free" : `R${ticket_price}`}
+                        </span>
+                        <span className="text-purple-700 bg-purple-100 px-2 py-1 rounded-full text-sm font-semibold">
+                            {category}
+                        </span>
+                    </div>
+                    <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                            {moment(event_date_and_time).format("DD MMM YYYY HH:mm")}
+                        </p>
+                        <h3 className="text-lg font-semibold text-gray-900 mt-1">
+                            {event_title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {event_address?.address}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2 line-clamp-3">{event_description}</p>
+                    </div>
+                </div>
+
+                {/* Show Booked Users or No Attendees Message */}
+                <div className="p-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-x-3">
+                            {booked_tickets && booked_tickets.length > 0 ? (
+                                <div
+                                    className="flex -space-x-1 overflow-hidden cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (user) {
+                                            handleFetchJoinedMembers(_id);
+                                        } else {
+                                            toast.error("Please login to view members");
+                                            navigate("/login");
+                                        }
+                                    }}
+                                >
+                                    {booked_tickets
+                                        ?.filter(
+                                            (user, index, self) =>
+                                                index === self.findIndex((u) => u._id === user._id)
+                                        )
+                                        ?.slice(0, 3)
+                                        ?.map((user, index) => (
+                                            <div key={index}>
+                                                <img
+                                                    alt={user.fullname}
+                                                    src={user.profile_picture}
+													loading="lazy"
+                                                    className="inline-block h-6 w-6 object-center object-cover rounded-full "
+                                                />
+                                            </div>
+                                        ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">No one has joined yet</p>
+                            )}
+                            <p className="text-sm text-gray-500">
+                                {booked_tickets && booked_tickets.length > 0
+                                    ? `${booked_tickets.length} Members Joined`
+                                    : ""}
+                            </p>
+                        </div>
+                        {/* Share Button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare(event_title, event_description, _id);
+                            }}
+                            className="bg-purple-500 text-white px-4 flex items-center gap-x-2 py-1.5 rounded-md font-medium hover:bg-purple-600"
+                        >
+                            <IoShareSocialOutline />
+                        </button>
                     </div>
                 </div>
             </div>

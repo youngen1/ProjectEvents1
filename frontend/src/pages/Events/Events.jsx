@@ -217,11 +217,11 @@ const Events = () => {
         }
     };
 
-    const handleShare = (_id, event_title) => {
+    const handleShare = (event_title, event_description, _id) => {
         const shareData = {
             title: event_title,
-            text: `Check out this event! ${event_title} is happening on ${new Date().toDateString()} at ${new Date().toLocaleTimeString()}. `,
-            url: "https://www.eventcircle.site/single-event/" + _id,
+            text: event_description,
+            url: window.location.origin + `/single-event/${_id}`,
         };
 
         if (navigator.share) {

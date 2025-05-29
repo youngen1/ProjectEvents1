@@ -1,8 +1,7 @@
 {
-  "name": "event-circle-frontend",
+  "name": "event-web-app",
   "private": true,
-  "version": "1.0.0",
-  "description": "Frontend for EventCircle - Event Management Platform",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -52,11 +51,5 @@
   },
   "engines": {
     "node": "18"
-  },
-  "keywords": ["frontend", "event", "management", "react", "vite"],
-  "author": "",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/username/event-circle"
   }
 }

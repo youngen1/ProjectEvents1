@@ -6,6 +6,7 @@ import NavBar from "../../components/NavBar";
 import { useAuth } from "../../context/AuthContext";
 import UpdateProfileModel from "./UpdateProfileModel";
 import WithdrawModel from "./WithdrawModel";
+import UserEvents from "./UserEvents";
 import axiosInstance from "../../utils/axiosInstance";
 import { storage } from "../../utils/firebaseConfig";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
@@ -19,33 +20,40 @@ export default function Finance() {
   const {
     user,
     addBankAccount,
-
+   
     requestWithdrawal,
     updateProfile,
   } = useAuth();
+  const [myEvents, setMyEvents] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBankAccountModalOpen, setIsBankAccModalOpen] = useState(false);
   const [profileModel, setProfileModel] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profileUpdateLoading, setProfileUpdateLoading] = useState(false);
+  const [totalEarnings , setTotalEarnings] = useState(0);
 
   console.log("user in finance.jsx ", user);
   console.log("user earnings " , user.total_earnings );
 
   useEffect(() => {
-    const fetchEarnings = async () => {
+    const fetchEvents = async () => {
       try {
-        const earnings = await axiosInstance.get('/events/admin/earnings');
+        const res = await axiosInstance.get(`/events/getUserEvents`);
+
+          const earnings = await axiosInstance.get('/events/admin/earnings');
         console.log(" earnings from backend ", earnings?.data);
+         setTotalEarnings( Number(earnings?.data.totalEarnings).toFixed(2));
+        console.log("my events", res?.data);
+        setMyEvents(res?.data);
       } catch (error) {
         console.log(error);
-        toast.error("Failed to fetch earnings");
+        toast.error("Failed to fetch events");
       }
     };
 
     if (user?._id) {
-      fetchEarnings();
+      fetchEvents();
     }
   }, [user?._id]);
 
@@ -192,7 +200,7 @@ export default function Finance() {
                   />
                 )}
 
-
+                
                 {isFollowingModalOpen && (
                   <FollowingModel
                     isOpen={isFollowingModalOpen}
@@ -279,7 +287,7 @@ export default function Finance() {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-500">Available Balance</p>
-                    <p className="text-3xl font-bold text-gray-900">R{user.total_earnings || 0}</p>
+                    <p className="text-3xl font-bold text-gray-900">R{totalEarnings || 0}</p>
                   </div>
                   {user?.total_earnings > 10 && (
                     <button
@@ -304,7 +312,7 @@ export default function Finance() {
               </div>
             </div>
 
-
+          
           </div>
         </main>
       </div>
