@@ -804,26 +804,55 @@ exports.getFollowing = async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
+};
 
-  exports.makeAdmin = async (req, res) => {
-    try {
-      const adminEmail = "mtswenisabelo301@gmail.com";
-      const user = await User.findOne({ email: adminEmail });
+/**
+ * Make user an admin
+ * @route POST /api/users/make-admin
+ * @description Protected route to make a user an admin
+ */
+exports.makeAdmin = async (req, res) => {
+  try {
+    const adminEmail = "mtswenisabelo301@gmail.com";
+    const user = await User.findOne({ email: adminEmail });
 
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      user.role = "admin";
-      await user.save();
-
-      const updatedUser = await User.findOne({ email: adminEmail });
-
-      res.status(200).json({ message: updatedUser });
-    } catch (error) {
-      res.status(500).json({ message: "Error making user admin", error: error.message });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  };
 
+    if (user.role === 'admin') {
+      return res.status(400).json({ message: "User is already an admin" });
+    }
+
+    user.role = "admin";
+    await user.save();
+
+    // Send notification email
+    const transporter = createEmailTransporter();
+    await transporter.sendMail({
+      from: EMAIL_USER,
+      to: adminEmail,
+      subject: "Admin Access Granted",
+      html: `
+        <h2>Admin Access Granted</h2>
+        <p>You have been granted admin access to EventCircle.</p>
+        <p>You now have access to additional features and controls.</p>
+        <p>Please use this responsibility wisely.</p>
+      `
+    });
+
+    res.status(200).json({
+      message: "User has been made admin successfully",
+      user: {
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error making user admin",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 };
 
