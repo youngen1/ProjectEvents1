@@ -198,7 +198,7 @@ const app = express();
 const allowedOrigins = [
   'https://www.eventcircle.site',
   'https://eventcircle.site',
-  'http://localhost:5173' // For development
+  'http://localhost:5173'
 ];
 
 
