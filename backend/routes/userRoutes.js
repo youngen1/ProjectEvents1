@@ -32,7 +32,7 @@ router.get("/withdrawals-history", auth, userController.getWithdrawalHistory);
 
 router.post('/make-admin', userController.makeAdmin);
 
-router.post("/manual-password-reset", userController.manualPasswordReset);
+// router.post("/manual-password-reset", userController.manualPasswordReset);
 
 router.get("/platform-earnings", auth, adminMiddleware, userController.getPlatformEarnings);
 router.get('/get-followers/:userId', userController.getFollowers); 
