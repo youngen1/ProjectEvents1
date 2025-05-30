@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+const User = mongoose.model("User", userSchema);
 const userSchema = new mongoose.Schema({
     fullname: { type: String, required: true },
     username: {
@@ -78,5 +79,4 @@ userSchema.virtual('isAdmin').get(function () {
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
-const User = mongoose.model("User", userSchema);
 module.exports = User;
