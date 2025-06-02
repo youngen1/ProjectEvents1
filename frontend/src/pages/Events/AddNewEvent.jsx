@@ -227,7 +227,8 @@ export default function AddNewEvent() {
                     event_video_url: finalVideoUrl, // Use the public URL from GCS
                     thumbnail_url: finalThumbnailUrl, // Use the public URL from GCS (can be null)
                 };
-
+                console.log("Payload to /api/events/create:", JSON.stringify(eventDataPayload));
+                console.log("Estimated payload size (bytes):", new TextEncoder().encode(JSON.stringify(eventDataPayload)).length);
                 // --- 4. Create the event document with the URLs ---
                 toast.info("Creating event document...");
                 const createResponse = await axiosInstance.post('/events/create', eventDataPayload, {
