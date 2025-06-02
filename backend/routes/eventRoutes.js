@@ -12,13 +12,7 @@ const authMiddleware = require('../middleware/auth'); // Assuming correct path
 
 // --- Event Routes ---
 
-// --- NEW ROUTE for Generating Signed URLs for Client-Side Upload ---
-// This is protected because a user must be logged in to get a URL to upload a file for an event they are creating.
-router.post(
-    '/generate-upload-url',
-    authMiddleware,
-    eventController.generateStorageSignedUrl // Controller to generate signed URLs
-);
+
 
 // --- Updated Create Event Route ---
 
