@@ -1,41 +1,35 @@
 const mongoose = require('mongoose');
-const Event = require('../models/Event'); // Adjust path if needed
-const User = require('../models/User');   // Adjust path if needed
-const PlatformEarning = require('../models/PlatformEarning'); // Adjust path if needed
+const Event = require('../models/Event');
+const User = require('../models/User');
+const PlatformEarning = require('../models/PlatformEarning');
 const { DateTime } = require('luxon');
-const crypto = require('crypto');
-const admin = require('firebase-admin'); // Ensure firebase-admin is installed and initialized
+require('crypto');
+require('firebase-admin');
 const { v4: uuidv4 } = require('uuid'); // Ensure uuid is installed (npm i uuid)
 const Joi = require('joi');
-const { initializePayment, verifyPayment } = require('../utils/paystack'); // Adjust path if needed
+const { initializePayment, verifyPayment } = require('../utils/paystack');
 
-// --- Environment Variables ---
-// Make sure FRONTEND_URL is set in your .env file or environment
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'; // Provide a default for safety
 
 // --- Firebase Storage Bucket ---
 // IMPORTANT: Ensure Firebase Admin SDK is initialized in your main server file (e.g., app.js or server.js)
 // Example initialization (should be done ONCE at startup):
 /*
-  const admin = require('firebase-admin');
-  const serviceAccount = require('./path/to/your/serviceAccountKey.json'); // !! SECURE THIS FILE !!
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: "YOUR_STORAGE_BUCKET_URL" // e.g., "your-project-id.appspot.com"
-  });
 */
 // Get the storage bucket instance (assuming admin is initialized)
 let bucket;
 try {
-    bucket = admin.storage().bucket();
+    const admin = require('firebase-admin');
+
+    if (admin.apps.length){
+        bucket = admin.storage().bucket();
+    } else{
+        conosle.error("Firebase Admin SDK not initialized. Please initialize it before using the storage bucket.");
+
+    }
 } catch (initError) {
-    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    console.error("!!! Firebase Admin SDK not initialized properly before !!!");
-    console.error("!!! obtaining the storage bucket. Check server init. !!!");
-    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    // You might want to throw the error or exit if Firebase is critical
-    // throw initError;
+  console.error("Error initializing Firebase Admin SDK:", initError.message);
 }
 
 
@@ -56,43 +50,140 @@ function calculateAge(dateOfBirth) {
 
 // --- Joi Validation Schemas ---
 
-// Schema for the NEW UPLOAD ROUTE's req.body (validates non-file fields)
-const createEventWithUploadBodySchema = Joi.object({
+exports.generateStorageSignedUrl = async (req, res) => {
+    if (!bucket) {
+        console.error("Firebase Storage Bucket is not initialized for generating signed URL.");
+        return res.status(500).json({ message: "Server configuration error: Storage service unavailable." });
+    }
+
+    const { filename, contentType, type } = req.body; // type can be 'video' or 'thumbnail'
+
+    if (!filename || !contentType || !type) {
+        return res.status(400).json({ message: "Filename, contentType, and type (video/thumbnail) are required." });
+    }
+
+    // Define a path structure in your bucket
+    const basePath = type === 'video' ? 'event_videos' : 'event_thumbnails';
+    const uniqueFilename = `${basePath}/${uuidv4()}-${filename.replace(/[^a-zA-Z0-9.]+/g, '_')}`;
+
+    const file = bucket.file(uniqueFilename);
+
+    const options = {
+        version: 'v4',
+        action: 'write',
+        expires: Date.now() + 15 * 60 * 1000, // 15 minutes URL validity
+        contentType: contentType,
+    };
+
+    try {
+        console.log(`[${new Date().toISOString()}] Generating signed URL for: ${uniqueFilename}, type: ${type}`);
+        const [signedUrl] = await file.getSignedUrl(options);
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFilename}`; // Construct public URL
+
+        console.log(`[${new Date().toISOString()}] Signed URL generated: ${signedUrl}`);
+        res.status(200).json({
+            signedUrl,    // URL for client to PUT the file
+            publicUrl,    // Publicly accessible URL after upload (to store in DB)
+            uniqueFilename // The path in Firebase Storage
+        });
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error generating signed URL for ${type}:`, error);
+        res.status(500).json({ message: `Could not generate upload URL for ${type}.`, details: error.message });
+    }
+};
+
+const createEventBodySchema = Joi.object({
     event_title: Joi.string().required().min(3).max(255),
     category: Joi.string().required(),
-    event_date_and_time: Joi.string().isoDate().required(), // Expect ISO string from frontend
-    event_address: Joi.string().required(), // Expect stringified JSON
-    additional_info: Joi.string().allow('').optional(), // Make optional if needed
+    event_date_and_time: Joi.string().isoDate().required(),
+    event_address: Joi.string().required(),
+    additional_info: Joi.string().allow('').optional(),
     ticket_price: Joi.number().required().min(0),
     event_description: Joi.string().required(),
     event_duration: Joi.number().required().min(0.5),
     event_max_capacity: Joi.number().required().min(1).integer(),
-    age_restriction: Joi.string().required(),    // Expect stringified JSON array
-    gender_restriction: Joi.string().required(), // Expect stringified JSON array
-    // created_by comes from req.user (auth middleware)
-}).options({ stripUnknown: true }); // Ignore fields not defined (like files)
+    age_restriction: Joi.string().required(),
+    gender_restriction: Joi.string().required(),
 
+    event_video_url: Joi.string().uri().required(),
+    thumbnail_url: Joi.string().uri().allow(null, ''),
+}).options({ stripUnknown: true });
 
-// Original schema (for reference, not used by the new upload route)
-const originalCreateEventSchema = Joi.object({
-    event_title: Joi.string().required().min(3).max(255),
-    category: Joi.string().required(),
-    event_date_and_time: Joi.date().required(),
-    event_address: Joi.object({
-        address: Joi.string().required(),
-        longitude: Joi.number().required(),
-        latitude: Joi.number().required(),
-    }).required(),
-    additional_info: Joi.string().allow(''),
-    ticket_price: Joi.number().required().min(0),
-    event_description: Joi.string().required(),
-    event_duration: Joi.number().required(),
-    event_max_capacity: Joi.number().required().min(1),
-    event_video: Joi.string().allow(''), // Expected URL
-    thumbnail: Joi.string().allow(''),   // Expected URL
-    age_restriction: Joi.array().items(Joi.string()).required(),
-    gender_restriction: Joi.array().items(Joi.string()).required(),
-});
+exports.createEventWithUpload = async (req, res) => {
+    // --- 1. Validate req.body (which now includes event_video_url and thumbnail_url) ---
+    console.log(`[${new Date().toISOString()}] createEventWithUpload received body: `, req.body);
+    const { error: bodyError, value: validatedBody } = createEventBodySchema.validate(req.body);
+    if (bodyError) {
+        const errorMessages = bodyError.details.map(detail => detail.message);
+        console.log(`[${new Date().toISOString()}] Validation errors: `, errorMessages);
+        return res.status(400).json({ message: "Validation Error", errors: errorMessages });
+    }
+
+    const created_by = req.user?.id;
+    if (!created_by) {
+        console.log(`[${new Date().toISOString()}] Authentication required: User ID not found.`);
+        return res.status(401).json({ message: 'Authentication required: User ID not found.' });
+    }
+
+    try {
+        // --- URLs are now directly from validatedBody ---
+        const videoURL = validatedBody.event_video_url;
+        const thumbnailURL = validatedBody.thumbnail_url || null; // If optional and not provided
+
+        console.log(`[${new Date().toISOString()}] Using Video URL: ${videoURL}`);
+        console.log(`[${new Date().toISOString()}] Using Thumbnail URL: ${thumbnailURL}`);
+
+        // --- 2. Parse JSON string fields from validatedBody ---
+        let parsedAddress, parsedAgeRestriction, parsedGenderRestriction;
+        try {
+            parsedAddress = JSON.parse(validatedBody.event_address);
+            parsedAgeRestriction = validatedBody.age_restriction ? JSON.parse(validatedBody.age_restriction) : [];
+            parsedGenderRestriction = validatedBody.gender_restriction ? JSON.parse(validatedBody.gender_restriction) : [];
+
+            if (!parsedAddress || typeof parsedAddress.address !== 'string' || typeof parsedAddress.longitude !== 'number' || typeof parsedAddress.latitude !== 'number') {
+                throw new Error('Invalid event_address structure');
+            }
+        } catch (parseError) {
+            console.error(`[${new Date().toISOString()}] Error parsing JSON fields from body:`, parseError);
+            return res.status(400).json({ message: 'Invalid format for address, age, or gender restriction string.' });
+        }
+
+        // --- 3. Create Event Document in MongoDB ---
+        const newEvent = new Event({
+            ...validatedBody, // Spread validated fields (includes URLs now)
+            event_address: {
+                address: parsedAddress.address,
+                longitude: parsedAddress.longitude,
+                latitude: parsedAddress.latitude,
+            },
+            age_restriction: parsedAgeRestriction,
+            gender_restriction: parsedGenderRestriction,
+            created_by: created_by,
+            // Overwrite with the explicit URL fields from validatedBody if schema names differ
+            event_video: videoURL,    // Ensure your Event model schema field is 'event_video'
+            thumbnail: thumbnailURL,  // Ensure your Event model schema field is 'thumbnail'
+        });
+
+        console.log(`[${new Date().toISOString()}] Saving event to database for user ${created_by}...`);
+        const savedEvent = await newEvent.save();
+        console.log(`[${new Date().toISOString()}] Event saved successfully: ${savedEvent._id}`);
+
+        // --- 4. Send Success Response ---
+        res.status(201).json({
+            message: 'Event created successfully!',
+            event: savedEvent,
+        });
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error in createEventWithUpload:`, error);
+
+        if (error.name === 'ValidationError') {
+            res.status(400).json({ message: 'Database validation failed.', details: error.message });
+        } else {
+            res.status(500).json({ message: 'Internal server error creating event.', details: error.message });
+        }
+    }
+};
 
 // Schema for updates (may need modification if updates involve file changes)
 const updateEventSchema = Joi.object({
@@ -336,79 +427,7 @@ exports.createEvent = async (req, res) => {
 */
 
 
-// --- Get All Events (with Pagination & Filtering) ---
-// exports.getEvents = async (req, res) => {
-//     try {
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = parseInt(req.query.limit) || 10;
-//         const skip = (page - 1) * limit;
 
-//         const filter = {};
-//         const searchTerm = req.query.searchTerm?.trim(); // Trim whitespace
-//         const searchType = req.query.searchType;
-
-//         // Build filter based on search term and type
-//         if (searchTerm) {
-//             const regex = { $regex: searchTerm, $options: 'i' }; // Case-insensitive regex
-
-//             if (searchType === "location" && filter["event_address.address"] === undefined) { // Check if already set
-//                 filter["event_address.address"] = regex;
-//             } else if (searchType === "event" && filter.event_title === undefined) {
-//                 filter.event_title = regex;
-//             }
-//             // Username search needs special handling after population
-//         }
-
-//         if (req.query.category && filter.category === undefined) {
-//             filter.category = req.query.category;
-//         }
-
-//         // Date filtering
-//         if (req.query.dateFilter && filter.event_date_and_time === undefined) {
-//             const today = DateTime.now().startOf('day'); // Use Luxon for consistency
-//             if (req.query.dateFilter === 'today') {
-//                 const tomorrow = today.plus({ days: 1 });
-//                 filter.event_date_and_time = { $gte: today.toJSDate(), $lt: tomorrow.toJSDate() };
-//             } else if (req.query.dateFilter === 'upcoming') {
-//                 filter.event_date_and_time = { $gte: today.toJSDate() };
-//             }
-//         }
-
-//         // Count total documents matching the filter *before* pagination
-//         // Note: Count doesn't perfectly reflect post-population username filter results
-//         const totalMatchingFilter = await Event.countDocuments(filter);
-
-//         // Base query with population
-//         let query = Event.find(filter)
-//             .populate("created_by", "fullname email profile_picture username") // Select needed fields
-//             .populate("booked_tickets", "fullname email profile_picture")     // Select needed fields
-//             .sort({ event_date_and_time: 1 }) // Sort before skip/limit
-//             .skip(skip)
-//             .limit(limit);
-
-//         let events = await query.exec();
-
-//         // Apply username filter *after* population if needed
-//         if (searchTerm && searchType === 'username') {
-//             events = events.filter(event =>
-//                 event.created_by?.username?.toLowerCase().includes(searchTerm.toLowerCase())
-//             );
-//             // Note: 'total' count won't reflect this post-filtering accurately.
-//             // A more complex aggregation pipeline would be needed for perfect count + filter + pagination.
-//         }
-
-//         res.json({
-//             events: events,
-//             total: totalMatchingFilter, // Total matching the initial filter
-//             page: page,
-//             limit: limit,
-//             //totalPages: Math.ceil(totalMatchingFilter / limit) // Can calculate on frontend too
-//         });
-//     } catch (error) {
-//         console.error("Error fetching events:", error);
-//         res.status(500).json({ message: "Error fetching events", error: error.message });
-//     }
-// };
 
 exports.getEvents = async (req, res) => {
     try {

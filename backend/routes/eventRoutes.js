@@ -4,30 +4,32 @@ const router = express.Router();
 
 const eventController = require('../controllers/eventController');
 const authMiddleware = require('../middleware/auth'); // Assuming correct path
-// const adminMiddleware = require('../middlewares/admin'); // Not used in provided routes, keep if needed elsewhere
+// const adminMiddleware = require('../middlewares/admin'); // Keep if needed for other routes
 
-//test
-
-// --- Import the configured multer instance ---
-const upload = require('../middleware/multerConfig'); // Adjust path as needed
+// --- Remove Multer for General Routes ---
+// 'upload' is no longer needed for the main '/create' route if using client-side uploads.
+// const upload = require('../middleware/multerConfig'); // No longer needed here if create is URL-based
 
 // --- Event Routes ---
 
-// --- MODIFIED ROUTE for Creating Event ---
-// This route now handles multipart/form-data with video and thumbnail files
+// --- NEW ROUTE for Generating Signed URLs for Client-Side Upload ---
+// This is protected because a user must be logged in to get a URL to upload a file for an event they are creating.
 router.post(
-    // '/create-with-upload', // You can use a new path like this OR replace '/create'
-    '/create', // Replacing the old '/create' path
-    authMiddleware,      // 1. Check authentication
-    upload.fields([      // 2. Use multer to process specific file fields
-        { name: 'event_video', maxCount: 1 },
-        { name: 'thumbnail_file', maxCount: 1 } // Accept optional thumbnail
-    ]),
-    eventController.createEventWithUpload // 3. Call the NEW controller function
+    '/generate-upload-url',
+    authMiddleware,
+    eventController.generateStorageSignedUrl // Controller to generate signed URLs
+);
+
+// --- Updated Create Event Route ---
+
+router.post(
+    '/create',
+    authMiddleware,      // 1. Ensure the user is authenticated
+    eventController.createEventWithUpload // 2. Call the controller that expects URLs
 );
 
 
-// --- Other Routes (Keep as they were unless they need file handling) ---
+// --- Other Routes (Remain Largely Unchanged) ---
 
 // Get all events (public route)
 router.get('/viewAll', eventController.getEvents);
@@ -38,8 +40,8 @@ router.get('/view/:eventId', eventController.getEventById);
 // Book an event (protected route)
 router.post('/book/:eventId', authMiddleware, eventController.bookEvent);
 
-// Verify payment (callback route - usually public or uses specific token, not standard user auth)
-router.get('/payment/verify', eventController.verifyPaymentCallback); // Added based on controller
+// Verify payment (callback route - usually public or uses specific token)
+router.get('/payment/verify', eventController.verifyPaymentCallback);
 
 // Get events created/booked by the logged-in user (protected)
 router.get('/getUserEvents', authMiddleware, eventController.getUserEvents);
@@ -51,20 +53,17 @@ router.get('/guests/:eventId', authMiddleware, eventController.getEventGuests);
 router.get('/featured', eventController.getFeaturedEvents);
 
 // Get events by a specific user ID (public or protected depending on requirements)
-// If public profile, remove authMiddleware. If only for logged-in users, keep it.
-router.get('/getEventsByUserId/:userId', eventController.getEventsByUserId); // Removed auth for public profile view?
+router.get('/getEventsByUserId/:userId', eventController.getEventsByUserId); // Assuming public profile view
 
 // Delete an event (protected - event creator only)
 router.delete('/:eventId', authMiddleware, eventController.deleteEvent);
 
-// Update an event (protected - event creator only)
-// ** NOTE: This route still uses eventController.updateEvent and does NOT handle file uploads.**
-// If you need to update video/thumbnail, this route needs multer middleware too.
 router.put('/update/:eventId', authMiddleware, eventController.updateEvent);
 
-// --- Admin Routes 
-router.get('/admin/earnings', authMiddleware,  eventController.getPlatformEarnings);
-// router.delete('/admin/delete-all', authMiddleware, adminMiddleware, eventController.deleteAllEvents);
-
+// --- Admin Routes ---
+// Ensure adminMiddleware is correctly implemented if used.
+// For getPlatformEarnings, authMiddleware might be enough if it checks for an admin role.
+router.get('/admin/earnings', authMiddleware, /* adminMiddleware (if needed), */ eventController.getPlatformEarnings);
+// router.delete('/admin/delete-all', authMiddleware, adminMiddleware, eventController.deleteAllEvents); // Uncomment if you have adminMiddleware
 
 module.exports = router;
